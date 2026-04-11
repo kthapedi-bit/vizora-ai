@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizora AI — Create Videos in 60 Seconds</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ── CONFIG: paste your keys below ── */
+/* SUPABASE_URL and SUPABASE_ANON_KEY are set in the script tag */
+/* FAL_KEY is entered by admin in settings — never expose in frontend */
+
+:root {
+  --ink: #080C18;
+  --surface: #0D1426;
+  --card: #131D36;
+  --border: #1E2D52;
+  --border-hi: #2A3D6E;
+  --teal: #00D4AA;
+  --teal-soft: rgba(0,212,170,0.1);
+  --gold: #F5C842;
+  --gold-soft: rgba(245,200,66,0.1);
+  --coral: #FF6B5B;
+  --text: #E4EAF8;
+  --text-mid: #7A8DB0;
+  --text-dim: #3D4F78;
+  --success: #22C55E;
+  --r: 14px;
+  --rs: 8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── VIEWS ── */
+.view{display:none;min-height:100vh}
+.view.show{display:flex;flex-direction:column}
+
+/* ── NOISE ── */
+body::after{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* ── BTN ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;cursor:pointer;border:none;transition:all .2s;text-decoration:none;position:relative;z-index:1}
+.btn-p{background:linear-gradient(135deg,var(--teal),#00B899);color:var(--ink);font-weight:700}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,212,170,.35)}
+.btn-g{background:linear-gradient(135deg,var(--gold),#DBA820);color:var(--ink);font-weight:700}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(245,200,66,.3)}
+.btn-o{background:transparent;border:1px solid var(--border-hi);color:var(--text-mid)}
+.btn-o:hover{border-color:var(--teal);color:var(--teal)}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--text-mid);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.btn-lg{padding:14px 30px;font-size:16px;border-radius:var(--r)}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn-full{width:100%;justify-content:center}
+
+/* ── INPUTS ── */
+.field{margin-bottom:20px}
+.label{display:block;font-size:13px;font-weight:500;color:var(--text-mid);margin-bottom:7px}
+.label em{color:var(--teal);font-style:normal}
+input,textarea,select{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:12px 16px;outline:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--teal)}
+input::placeholder,textarea::placeholder{color:var(--text-dim)}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+select{appearance:none;cursor:pointer}
+select option{background:var(--surface)}
+
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{padding:6px 14px;border-radius:100px;font-size:13px;cursor:pointer;border:1.5px solid var(--border);color:var(--text-mid);transition:all .15s;background:transparent}
+.chip:hover,.chip.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);transition:border-color .2s}
+.card:hover{border-color:var(--border-hi)}
+
+/* ── PROGRESS BAR ── */
+.pbar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:2px;transition:width .5s ease}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 20px;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideUp .3s ease;max-width:320px}
+.toast-item.ok{border-color:var(--teal)}
+.toast-item.err{border-color:var(--coral)}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════
+   LANDING
+══════════════════ */
+#v-land{background:var(--ink);overflow:hidden;position:relative}
+.orbs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(130px);animation:drift 9s ease-in-out infinite alternate}
+.o1{width:500px;height:500px;background:var(--teal);opacity:.12;top:-150px;right:-100px}
+.o2{width:450px;height:450px;background:var(--gold);opacity:.1;bottom:-120px;left:-120px;animation-delay:-4s}
+.o3{width:280px;height:280px;background:var(--coral);opacity:.07;top:45%;left:35%;animation-delay:-7s}
+@keyframes drift{to{transform:translate(25px,-18px) scale(1.04)}}
+
+.land-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 44px;position:relative;z-index:2}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-m{width:34px;height:34px;background:linear-gradient(135deg,var(--teal),var(--gold));border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--ink)}
+.logo-t{font-family:'Syne',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.4px}
+.logo-t span{color:var(--teal)}
+
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px 64px;position:relative;z-index:2}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.2);color:var(--teal);padding:5px 15px;border-radius:100px;font-size:12px;font-weight:500;margin-bottom:28px;animation:fadeUp .5s ease both}
+.dot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(38px,6vw,76px);line-height:1.06;letter-spacing:-2px;margin-bottom:20px;animation:fadeUp .6s .08s ease both}
+.tc{color:var(--teal)}.gc{color:var(--gold)}
+.hero p{font-size:17px;color:var(--text-mid);max-width:520px;line-height:1.65;margin-bottom:36px;font-weight:300;animation:fadeUp .6s .16s ease both}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .24s ease both}
+.hero-stats{display:flex;gap:44px;margin-top:56px;animation:fadeUp .6s .32s ease both;flex-wrap:wrap;justify-content:center}
+.stat .n{font-family:'Syne',sans-serif;font-weight:800;font-size:26px}
+.stat .l{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* floating badges */
+.fbadge{position:absolute;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:12px;animation:float 6s ease-in-out infinite;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.fb1{top:22%;left:4%;animation-delay:0s}
+.fb2{top:28%;right:4%;animation-delay:-2.5s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.ftag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:4px}
+.ftag-t{background:rgba(0,212,170,.15);color:var(--teal)}
+.ftag-g{background:rgba(245,200,66,.15);color:var(--gold)}
+
+/* ══════════════════
+   AUTH
+══════════════════ */
+#v-auth{align-items:center;justify-content:center;background:var(--ink);padding:24px}
+.auth-box{width:100%;max-width:420px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:36px 32px}
+.auth-logo{display:flex;justify-content:center;margin-bottom:28px}
+.auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;text-align:center;margin-bottom:6px}
+.auth-sub{font-size:14px;color:var(--text-mid);text-align:center;margin-bottom:28px}
+.auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--text-dim)}
+.auth-switch a{color:var(--teal);cursor:pointer;text-decoration:none}
+.auth-err{background:rgba(255,107,91,.08);border:1px solid rgba(255,107,91,.3);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--coral);margin-bottom:16px;display:none}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--text-dim);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ══════════════════
+   DASHBOARD
+══════════════════ */
+#v-dash{flex-direction:row;background:var(--ink)}
+.sidebar{width:236px;min-height:100vh;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;padding:0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-head{padding:20px 18px;border-bottom:1px solid var(--border)}
+.sb-sect{padding:12px 10px 4px}
+.sb-lbl{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;padding:0 8px;margin-bottom:6px}
+.nav-i{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;color:var(--text-mid);font-size:13.5px;transition:all .15s;margin-bottom:2px}
+.nav-i:hover{background:var(--card);color:var(--text)}
+.nav-i.on{background:var(--teal-soft);color:var(--teal);font-weight:500}
+.nav-badge{margin-left:auto;background:var(--teal);color:var(--ink);font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px}
+.sb-foot{margin-top:auto;padding:14px 10px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--card);border-radius:var(--rs);cursor:pointer}
+.ua{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ink);flex-shrink:0}
+.uname{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uplan{font-size:11px;color:var(--text-dim)}
+.usage-bar{padding:12px 10px}
+.ub-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.ub-row span:first-child{color:var(--text-mid)}
+
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1.5px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
+.topbar h2{font-family:'Syne',sans-serif;font-weight:700;font-size:19px}
+.content{padding:28px;overflow-y:auto;flex:1}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sc{padding:18px 20px}
+.sc-lbl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.sc-val{font-family:'Syne',sans-serif;font-weight:700;font-size:26px;margin-bottom:3px}
+.sc-ch{font-size:12px}
+.up{color:var(--success)}.tc-ch{color:var(--teal)}
+
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-t{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.qa-card{padding:22px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.qa-card::after{content:'';position:absolute;inset:0;opacity:0;background:linear-gradient(135deg,rgba(0,212,170,.05),transparent);transition:opacity .2s}
+.qa-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.qa-card:hover::after{opacity:1}
+.qa-icon{width:42px;height:42px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:20px}
+.ic-t{background:rgba(0,212,170,.1)}
+.ic-g{background:rgba(245,200,66,.1)}
+.ic-c{background:rgba(255,107,91,.1)}
+.qa-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:5px}
+.qa-card p{font-size:12px;color:var(--text-mid);line-height:1.5}
+
+.vids-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.vid-card{overflow:hidden;cursor:pointer;transition:all .2s}
+.vid-card:hover{transform:translateY(-2px);border-color:var(--border-hi)}
+.vid-thumb{height:130px;position:relative;display:flex;align-items:center;justify-content:center}
+.vt1{background:linear-gradient(135deg,#062020,#0A3A28)}
+.vt2{background:linear-gradient(135deg,#18160A,#2B2300)}
+.vt3{background:linear-gradient(135deg,#18080A,#300A1A)}
+.play-b{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.2);font-size:14px;transition:all .2s}
+.vid-card:hover .play-b{background:rgba(0,212,170,.28);border-color:var(--teal)}
+.vdur{position:absolute;bottom:7px;right:7px;background:rgba(0,0,0,.65);padding:2px 7px;border-radius:4px;font-size:10px}
+.vid-info{padding:12px}
+.vid-t{font-size:13px;font-weight:500;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vid-m{display:flex;align-items:center;justify-content:space-between}
+.vid-d{font-size:11px;color:var(--text-dim)}
+.vstatus{display:flex;align-items:center;gap:4px;font-size:11px}
+.sdot{width:5px;height:5px;border-radius:50%}
+.sdot-done{background:var(--success)}.sdot-proc{background:var(--gold)}
+
+/* ══════════════════
+   CREATE WIZARD
+══════════════════ */
+#v-create{flex-direction:row;background:var(--ink)}
+.wiz-side{width:260px;background:var(--surface);border-right:1.5px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;flex-shrink:0}
+.wiz-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.wiz-top{padding:18px 28px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.wiz-top-t{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
+.wiz-body{flex:1;padding:28px;overflow-y:auto}
+.wiz-foot{padding:18px 28px;border-top:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+
+.steps{display:flex;flex-direction:column}
+.step{display:flex;gap:14px;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:13px;top:32px;width:2px;height:32px;background:var(--border)}
+.step.done:not(:last-child)::after{background:var(--teal)}
+.s-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:var(--text-dim);background:var(--surface);z-index:1;transition:all .3s}
+.step.on .s-dot{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+.step.done .s-dot{border-color:var(--teal);background:var(--teal);color:var(--ink)}
+.s-info{padding-bottom:28px}
+.s-name{font-size:13px;font-weight:500;color:var(--text-mid)}
+.step.on .s-name,.step.done .s-name{color:var(--text)}
+.s-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
+
+.style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scard{border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--card)}
+.scard:hover{border-color:var(--border-hi)}
+.scard.on{border-color:var(--teal);background:var(--teal-soft)}
+.sprev{height:60px;border-radius:var(--rs);margin-bottom:8px}
+.sname{font-size:12px;font-weight:600}
+.sdesc{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lang-i{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;transition:all .15s}
+.lang-i:hover,.lang-i.on{border-color:var(--teal)}
+.lflag{font-size:18px}
+.lname{font-size:13px;font-weight:500}
+.lsub{font-size:11px;color:var(--text-dim)}
+.lcheck{margin-left:auto;color:var(--teal);display:none;font-size:14px}
+.lang-i.on .lcheck{display:block}
+
+/* generate progress */
+.gen-box{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;text-align:center;padding:32px}
+.ring{position:relative;width:110px;height:110px;margin:0 auto 22px}
+.ring svg{transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5;transition:stroke-dashoffset .6s ease}
+.ring .rt{stroke:var(--border)}
+.ring .rf{stroke:var(--teal);stroke-linecap:round;stroke-dasharray:314}
+.ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+.gen-steps{margin-top:28px;display:flex;flex-direction:column;gap:7px;width:100%;max-width:280px}
+.gstep{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-mid)}
+.gstep.done{color:var(--success)}
+.gstep.on{color:var(--teal)}
+.gi{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.gi.done{background:var(--success);color:var(--ink)}
+.gi.on{background:var(--teal-soft);border:1px solid var(--teal);animation:pulse 1.5s infinite}
+.gi.wait{background:var(--card);border:1px solid var(--border)}
+
+/* result */
+.result-box{text-align:center;padding:28px}
+.result-video{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin:20px auto;max-width:480px}
+.result-video video{width:100%;display:block}
+.result-video .no-video{height:180px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A2020,#082A18);font-size:36px;cursor:pointer}
+.pub-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+
+/* two col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.format-card{border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--card)}
+.format-card:hover{border-color:var(--border-hi)}
+.format-card.on{border-color:var(--teal);background:var(--teal-soft)}
+
+/* script preview */
+.script-box{background:var(--card);border:1.5px solid var(--border-hi);border-radius:var(--r);padding:18px;margin-top:14px}
+.sb-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sb-lbl2{font-size:10px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.ai-ind{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)}
+
+/* ══════════════════
+   RESPONSIVE
+══════════════════ */
+@media(max-width:768px){
+  .land-nav{padding:16px 18px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .qa-grid,.vids-grid,.style-grid{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .wiz-side{display:none}
+  .fbadge{display:none}
+  .hero-stats{gap:24px}
+  .two-col{grid-template-columns:1fr}
+  .lang-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════
+     LANDING
+══════════════════════════════ -->
+<div id="v-land" class="view show">
+  <div class="orbs">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+  </div>
+
+  <!-- Floating context cards -->
+  <div class="fbadge fb1" style="z-index:2">
+    <div class="ftag ftag-t">✓ Published</div>
+    <div style="font-size:13px;color:var(--text);font-weight:500">Restaurant Promo · Lagos</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:3px">3,200 views on TikTok</div>
+  </div>
+  <div class="fbadge fb2" style="z-index:2">
+    <div class="ftag ftag-g">⚡ Generating</div>
+    <div style="font-size:13px;color:var(--text);font-weight:500">Real Estate · Cairo</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:3px">60 sec · Arabic · 4K</div>
+  </div>
+
+  <nav class="land-nav" style="position:relative;z-index:3">
+    <div class="logo">
+      <div class="logo-m">V</div>
+      <div class="logo-t">Vizora<span>AI</span></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Sign In</button>
+      <button class="btn btn-p btn-sm" onclick="showAuth('signup')">Get Started Free</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="badge"><div class="dot"></div>Built for Africa, MENA & Emerging Markets</div>
+    <h1>Turn Ideas Into<br><span class="tc">Viral Videos</span><br>in <span class="gc">60 Seconds</span></h1>
+    <p>AI video creation for SMEs and creators. No camera. No studio. No technical skills. Your idea — Vizora does the rest.</p>
+    <div class="hero-cta">
+      <button class="btn btn-p btn-lg" onclick="showAuth('signup')">▶ &nbsp;Create Free Video</button>
+      <button class="btn btn-o btn-lg" onclick="showView('v-pricing')">View Plans</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="n">50K+</div><div class="l">Creators</div></div>
+      <div class="stat"><div class="n">5</div><div class="l">Languages</div></div>
+      <div class="stat"><div class="n">200+</div><div class="l">Templates</div></div>
+      <div class="stat"><div class="n">60s</div><div class="l">Avg Time</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     AUTH
+══════════════════════════════ -->
+<div id="v-auth" class="view">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo">
+        <div class="logo-m">V</div>
+        <div class="logo-t">Vizora<span>AI</span></div>
+      </div>
+    </div>
+    <h2 class="auth-title" id="auth-title">Create your account</h2>
+    <p class="auth-sub" id="auth-sub">Start creating AI videos for free today.</p>
+    <div class="auth-err" id="auth-err"></div>
+
+    <!-- Signup form -->
+    <div id="form-signup">
+      <div class="field">
+        <label class="label">Full Name</label>
+        <input type="text" id="su-name" placeholder="Your name" autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="label">Email Address</label>
+        <input type="email" id="su-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <input type="password" id="su-pass" placeholder="Min 6 characters" autocomplete="new-password">
+      </div>
+      <button class="btn btn-p btn-full" onclick="doSignup()" id="su-btn">Create Account →</button>
+      <div class="auth-switch">Already have an account? <a onclick="showAuth('login')">Sign in</a></div>
+    </div>
+
+    <!-- Login form -->
+    <div id="form-login" style="display:none">
+      <div class="field">
+        <label class="label">Email Address</label>
+        <input type="email" id="li-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <input type="password" id="li-pass" placeholder="Your password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-p btn-full" onclick="doLogin()" id="li-btn">Sign In →</button>
+      <div class="auth-switch">Don't have an account? <a onclick="showAuth('signup')">Sign up free</a></div>
+    </div>
+
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-ghost btn-sm" onclick="showView('v-land')" style="font-size:12px">← Back to home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     DASHBOARD
+══════════════════════════════ -->
+<div id="v-dash" class="view">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="logo">
+        <div class="logo-m">V</div>
+        <div class="logo-t">Vizora<span>AI</span></div>
+      </div>
+    </div>
+    <div class="sb-sect">
+      <div class="sb-lbl">Main</div>
+      <div class="nav-i on" onclick="showDash()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-i" onclick="showView('v-create');initWizard()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Create Video
+        <span class="nav-badge">New</span>
+      </div>
+      <div class="nav-i" onclick="showMyVideos()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3"/><polygon points="10,8 16,12 10,16"/></svg>
+        My Videos
+      </div>
+    </div>
+    <div class="sb-sect">
+      <div class="sb-lbl">Account</div>
+      <div class="nav-i" onclick="showView('v-pricing')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Upgrade Plan
+      </div>
+    </div>
+    <div class="usage-bar">
+      <div class="ub-row">
+        <span>Videos this month</span>
+        <span id="usage-count">0 / 3</span>
+      </div>
+      <div class="pbar"><div class="pbar-fill" id="usage-bar-fill" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px" id="plan-label">Free Plan</div>
+    </div>
+    <div class="sb-foot">
+      <div class="user-pill" onclick="doLogout()">
+        <div class="ua" id="sb-avatar">?</div>
+        <div>
+          <div class="uname" id="sb-name">Loading...</div>
+          <div class="uplan">Click to sign out</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <div class="topbar">
+      <div>
+        <h2 id="dash-greeting">Good day 👋</h2>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:1px">Ready to create something great?</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="showView('v-create');initWizard()">+ New Video</button>
+    </div>
+
+    <div class="content" id="dash-content">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="card sc">
+          <div class="sc-lbl">Videos Created</div>
+          <div class="sc-val tc" id="d-total">0</div>
+          <div class="sc-ch tc-ch">All time</div>
+        </div>
+        <div class="card sc">
+          <div class="sc-lbl">This Month</div>
+          <div class="sc-val" id="d-month">0</div>
+          <div class="sc-ch up">↑ Growing</div>
+        </div>
+        <div class="card sc">
+          <div class="sc-lbl">Plan</div>
+          <div class="sc-val" style="font-size:18px;padding-top:4px" id="d-plan">Free</div>
+          <div class="sc-ch tc-ch">Upgrade for more</div>
+        </div>
+        <div class="card sc">
+          <div class="sc-lbl">Credits Left</div>
+          <div class="sc-val gc" id="d-credits">3</div>
+          <div class="sc-ch">Resets monthly</div>
+        </div>
+      </div>
+
+      <!-- Quick create -->
+      <div class="sec-hd"><div class="sec-t">Quick Create</div></div>
+      <div class="qa-grid">
+        <div class="card qa-card" onclick="showView('v-create');initWizard()">
+          <div class="qa-icon ic-t">🎬</div>
+          <h3>Text to Video</h3>
+          <p>Type your idea and generate a video in 60 seconds.</p>
+        </div>
+        <div class="card qa-card">
+          <div class="qa-icon ic-g">🖼️</div>
+          <h3>Image to Video</h3>
+          <p>Upload a photo and animate it into motion.</p>
+        </div>
+        <div class="card qa-card">
+          <div class="qa-icon ic-c">📋</div>
+          <h3>From Template</h3>
+          <p>Browse 200+ local business templates.</p>
+        </div>
+      </div>
+
+      <!-- My Videos -->
+      <div class="sec-hd">
+        <div class="sec-t">My Videos</div>
+        <div style="font-size:13px;color:var(--teal);cursor:pointer" onclick="showMyVideos()">View all →</div>
+      </div>
+      <div id="my-videos-preview">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);font-size:14px">
+          No videos yet. <span style="color:var(--teal);cursor:pointer" onclick="showView('v-create');initWizard()">Create your first →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CREATE WIZARD
+══════════════════════════════ -->
+<div id="v-create" class="view">
+  <div style="display:flex;flex:1">
+    <!-- Wizard sidebar -->
+    <aside class="wiz-side">
+      <div style="margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm" onclick="showDash()">← Back</button>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:6px">Create Video</div>
+      <div style="font-size:13px;color:var(--text-mid);margin-bottom:28px;line-height:1.5">Follow 5 steps to generate your AI video.</div>
+      <div class="steps" id="step-indicators">
+        <!-- filled by JS -->
+      </div>
+      <div style="margin-top:auto;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:5px">Credits remaining</div>
+        <div style="font-size:15px;font-weight:600" id="wiz-credits">—</div>
+      </div>
+    </aside>
+
+    <!-- Wizard main -->
+    <div class="wiz-main">
+      <div class="wiz-top">
+        <div>
+          <div class="wiz-top-t" id="wiz-title">Topic & Script</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-top:2px" id="wiz-step-label">Step 1 of 5</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showDash()">✕ Cancel</button>
+      </div>
+      <div class="pbar" style="border-radius:0">
+        <div class="pbar-fill" id="wiz-prog" style="width:20%"></div>
+      </div>
+      <div class="wiz-body" id="wiz-body"><!-- filled by JS --></div>
+      <div class="wiz-foot">
+        <button class="btn btn-ghost" id="wiz-back" onclick="wizBack()">← Back</button>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:12px;color:var(--text-dim)" id="wiz-hint">Describe your video idea</span>
+          <button class="btn btn-p" id="wiz-next" onclick="wizNext()">Continue →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PRICING
+══════════════════════════════ -->
+<div id="v-pricing" class="view" style="background:var(--ink);align-items:center;padding:48px 24px;flex-direction:column">
+  <nav style="width:100%;max-width:900px;display:flex;align-items:center;justify-content:space-between;margin-bottom:48px">
+    <div class="logo" onclick="goHome()" style="cursor:pointer">
+      <div class="logo-m">V</div>
+      <div class="logo-t">Vizora<span>AI</span></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
+  </nav>
+  <div style="text-align:center;margin-bottom:44px">
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px;letter-spacing:-1px;margin-bottom:10px">Simple, Fair Pricing</h2>
+    <p style="font-size:15px;color:var(--text-mid)">Pay with M-Pesa, Flutterwave, Paystack or card. No surprises.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:860px;width:100%">
+    <!-- Free -->
+    <div class="card" style="padding:28px 24px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Free</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">Try Vizora AI, no card needed.</div>
+      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$0</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:22px">Always free</div>
+      <button class="btn btn-o btn-full" onclick="goHome()">Get Started</button>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
+        <div>✓ 3 videos/month (watermark)</div>
+        <div>✓ Up to 5 seconds</div>
+        <div>✓ 720p</div>
+        <div>✓ English only</div>
+        <div style="color:var(--text-dim)">✕ Brand kit</div>
+        <div style="color:var(--text-dim)">✕ Auto-publish</div>
+      </div>
+    </div>
+    <!-- Creator -->
+    <div class="card" style="padding:28px 24px;border-color:var(--teal);background:linear-gradient(180deg,rgba(0,212,170,.05),var(--card));position:relative">
+      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--ink);font-size:11px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap">⭐ Most Popular</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Creator</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">For creators and small businesses.</div>
+      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$9</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:12px;margin-bottom:22px">Or <span style="color:var(--teal)">$2/week via M-Pesa · Flutterwave</span></div>
+      <button class="btn btn-p btn-full" onclick="showAuth('signup')">Start Creating →</button>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
+        <div>✓ 30 videos/month</div>
+        <div>✓ Up to 30 seconds</div>
+        <div>✓ 1080p Full HD</div>
+        <div>✓ All 5 languages</div>
+        <div>✓ Brand kit</div>
+        <div style="color:var(--text-dim)">✕ Auto-publish</div>
+      </div>
+    </div>
+    <!-- Business -->
+    <div class="card" style="padding:28px 24px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Business</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">For growing SMEs and agencies.</div>
+      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$25</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:22px">Mobile money accepted</div>
+      <button class="btn btn-g btn-full" onclick="showAuth('signup')">Upgrade Now</button>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
+        <div>✓ 100 videos/month</div>
+        <div>✓ Up to 3 minutes</div>
+        <div>✓ 1080p + 4K</div>
+        <div>✓ All 5 languages</div>
+        <div>✓ Brand kit + team</div>
+        <div>✓ Auto-publish</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:32px;font-size:13px;color:var(--text-dim);text-align:center">M-Pesa · Flutterwave · Paystack · Telr · Stripe &nbsp;·&nbsp; Cancel anytime</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG — REPLACE THESE WITH YOUR REAL KEYS
+// ══════════════════════════════════════════════
+const SUPABASE_URL = 'https://ezbbjxtdrhrqietqwxer.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
+
+
+// ══════════════════════════════════════════════
+//  SUPABASE CLIENT
+// ══════════════════════════════════════════════
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let currentUser = null;
+let userVideos = [];
+let wizStep = 1;
+let wizData = { topic: '', audience: '', format: 'landscape', style: 'cinematic', length: '15', language: 'en', script: '' };
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  window.scrollTo(0, 0);
+}
+
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${type === 'ok' ? '✓' : '✕'}</span><span>${msg}</span>`;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? '...' : text;
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning 👋';
+  if (h < 17) return 'Good afternoon 👋';
+  return 'Good evening 👋';
+}
+
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+function showAuth(mode) {
+  showView('v-auth');
+  const isLogin = mode === 'login';
+  document.getElementById('auth-title').textContent = isLogin ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent = isLogin ? 'Sign in to your Vizora AI account.' : 'Start creating AI videos for free today.';
+  document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('auth-err').style.display = 'none';
+}
+
+function showAuthErr(msg) {
+  const el = document.getElementById('auth-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doSignup() {
+  const name = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const pass = document.getElementById('su-pass').value;
+  if (!name || !email || !pass) return showAuthErr('Please fill in all fields.');
+  if (pass.length < 6) return showAuthErr('Password must be at least 6 characters.');
+  setLoading('su-btn', true, 'Creating account...');
+  const { data, error } = await db.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+  setLoading('su-btn', false, 'Create Account →');
+  if (error) return showAuthErr(error.message);
+  if (data.user) {
+    currentUser = data.user;
+    await initUserProfile(data.user, name);
+    toast('Account created! Welcome to Vizora AI 🎉');
+    loadDashboard();
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const pass = document.getElementById('li-pass').value;
+  if (!email || !pass) return showAuthErr('Please enter your email and password.');
+  setLoading('li-btn', true, 'Signing in...');
+  const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+  setLoading('li-btn', false, 'Sign In →');
+  if (error) return showAuthErr('Invalid email or password.');
+  currentUser = data.user;
+  toast('Welcome back! 👋');
+  loadDashboard();
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  currentUser = null;
+  userVideos = [];
+  showView('v-land');
+  toast('Signed out successfully.');
+}
+
+async function initUserProfile(user, name) {
+  // Create profile row in Supabase
+  await db.from('profiles').upsert({
+    id: user.id,
+    full_name: name,
+    email: user.email,
+    plan: 'free',
+    videos_this_month: 0,
+    videos_total: 0,
+    created_at: new Date().toISOString()
+  });
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+async function loadDashboard() {
+  showView('v-dash');
+  if (!currentUser) return;
+
+  // Set greeting
+  document.getElementById('dash-greeting').textContent = getGreeting();
+
+  // Load profile
+  const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (profile) {
+    const name = profile.full_name || currentUser.email.split('@')[0];
+    const initial = name.charAt(0).toUpperCase();
+    document.getElementById('sb-avatar').textContent = initial;
+    document.getElementById('sb-name').textContent = name;
+    document.getElementById('d-plan').textContent = profile.plan === 'free' ? 'Free' : profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1);
+    document.getElementById('d-total').textContent = profile.videos_total || 0;
+    document.getElementById('d-month').textContent = profile.videos_this_month || 0;
+    const limit = profile.plan === 'free' ? 3 : profile.plan === 'creator' ? 30 : 100;
+    const used = profile.videos_this_month || 0;
+    const left = Math.max(0, limit - used);
+    document.getElementById('d-credits').textContent = left;
+    document.getElementById('usage-count').textContent = `${used} / ${limit}`;
+    document.getElementById('usage-bar-fill').style.width = `${Math.min(100, (used/limit)*100)}%`;
+    document.getElementById('plan-label').textContent = `${profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)} Plan`;
+    document.getElementById('wiz-credits').textContent = `${left} credits`;
+  }
+
+  // Load videos
+  const { data: videos } = await db.from('videos').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(6);
+  userVideos = videos || [];
+  renderVideoPreviews(userVideos.slice(0, 3));
+}
+
+function renderVideoPreviews(videos) {
+  const container = document.getElementById('my-videos-preview');
+  if (!videos || videos.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:14px">No videos yet. <span style="color:var(--teal);cursor:pointer" onclick="showView('v-create');initWizard()">Create your first →</span></div>`;
+    return;
+  }
+  const bgs = ['vt1','vt2','vt3','vt1','vt2','vt3'];
+  container.innerHTML = `<div class="vids-grid">${videos.map((v,i) => `
+    <div class="card vid-card" onclick="openVideo('${v.id}')">
+      <div class="vid-thumb ${bgs[i%3]}">
+        <div class="play-b">▶</div>
+        <div class="vdur">${v.duration || '0:15'}</div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-t">${v.title || 'Untitled Video'}</div>
+        <div class="vid-m">
+          <div class="vid-d">${formatDate(v.created_at)}</div>
+          <div class="vstatus">
+            <div class="sdot ${v.status === 'done' ? 'sdot-done' : 'sdot-proc'}"></div>
+            <span style="color:${v.status === 'done' ? 'var(--success)' : 'var(--gold)'}">${v.status === 'done' ? 'Ready' : 'Processing'}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function showMyVideos() {
+  // Show all videos in the main content area
+  const container = document.getElementById('dash-content');
+  const bgs = ['vt1','vt2','vt3'];
+  if (!userVideos || userVideos.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:80px 24px"><div style="font-size:48px;margin-bottom:16px">🎬</div><h3 style="font-family:'Syne',sans-serif;margin-bottom:10px">No videos yet</h3><p style="color:var(--text-mid);margin-bottom:24px">Create your first AI video in 60 seconds.</p><button class="btn btn-p" onclick="showView('v-create');initWizard()">Create Now →</button></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="sec-hd"><div class="sec-t">All Videos (${userVideos.length})</div><button class="btn btn-ghost btn-sm" onclick="loadDashboard()">← Dashboard</button></div>
+    <div class="vids-grid">${userVideos.map((v,i) => `
+      <div class="card vid-card" onclick="openVideo('${v.id}')">
+        <div class="vid-thumb ${bgs[i%3]}"><div class="play-b">▶</div><div class="vdur">${v.duration||'0:15'}</div></div>
+        <div class="vid-info">
+          <div class="vid-t">${v.title||'Untitled Video'}</div>
+          <div class="vid-m"><div class="vid-d">${formatDate(v.created_at)}</div>
+          <div class="vstatus"><div class="sdot ${v.status==='done'?'sdot-done':'sdot-proc'}"></div><span style="color:${v.status==='done'?'var(--success)':'var(--gold)'}">${v.status==='done'?'Ready':'Processing'}</span></div></div>
+        </div>
+      </div>`).join('')}</div>`;
+}
+
+function openVideo(id) {
+  const v = userVideos.find(x => x.id === id);
+  if (!v || !v.video_url) return toast('Video still processing or unavailable.', 'err');
+  window.open(v.video_url, '_blank');
+}
+
+function showDash() { loadDashboard(); }
+function goHome() { currentUser ? loadDashboard() : showView('v-land'); }
+function formatDate(d) { return d ? new Date(d).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}) : ''; }
+
+// ══════════════════════════════════════════════
+//  WIZARD
+// ══════════════════════════════════════════════
+const STEPS = [
+  { name: 'Topic & Script', desc: "What's your video about?" },
+  { name: 'Style & Format', desc: 'Choose your visual style' },
+  { name: 'Language', desc: 'Select output language' },
+  { name: 'Generate', desc: 'AI creates your video' },
+  { name: 'Publish', desc: 'Share to your channels' },
+];
+
+function initWizard() {
+  wizStep = 1;
+  wizData = { topic: '', audience: '', format: 'landscape', style: 'cinematic', length: '15', language: 'en', script: '' };
+  renderWizard();
+}
+
+function renderStepIndicators() {
+  document.getElementById('step-indicators').innerHTML = STEPS.map((s,i) => {
+    const n = i + 1;
+    const cls = n < wizStep ? 'done' : n === wizStep ? 'on' : '';
+    const dot = n < wizStep ? '✓' : n;
+    return `<div class="step ${cls}">
+      <div class="s-dot">${dot}</div>
+      <div class="s-info"><div class="s-name">${s.name}</div><div class="s-desc">${s.desc}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderWizard() {
+  renderStepIndicators();
+  const s = STEPS[wizStep - 1];
+  document.getElementById('wiz-title').textContent = s.name;
+  document.getElementById('wiz-step-label').textContent = `Step ${wizStep} of 5`;
+  document.getElementById('wiz-prog').style.width = `${wizStep * 20}%`;
+
+  const hints = ['Describe your idea', 'Choose style then continue', 'Pick language', 'Generating...', 'Done! Share your video'];
+  document.getElementById('wiz-hint').textContent = hints[wizStep - 1];
+
+  const next = document.getElementById('wiz-next');
+  const back = document.getElementById('wiz-back');
+
+  if (wizStep === 4) {
+    next.style.display = 'none';
+    back.style.display = 'none';
+  } else if (wizStep === 5) {
+    next.textContent = '← Dashboard';
+    next.className = 'btn btn-ghost';
+    next.onclick = () => loadDashboard();
+    back.style.display = 'none';
+  } else {
+    next.style.display = '';
+    back.style.display = '';
+    next.onclick = wizNext;
+    next.textContent = wizStep === 3 ? '✦ Generate Video' : 'Continue →';
+    next.className = wizStep === 3 ? 'btn btn-g' : 'btn btn-p';
+    back.style.display = wizStep === 1 ? 'none' : '';
+  }
+
+  document.getElementById('wiz-body').innerHTML = getStepHTML(wizStep);
+  if (wizStep === 4) runGeneration();
+}
+
+function getStepHTML(step) {
+  if (step === 1) return `
+    <div class="field">
+      <label class="label">What is your video about? <em>*</em></label>
+      <textarea id="wiz-topic" placeholder="E.g. Promote my new restaurant menu with local flavors in Lagos...">${wizData.topic}</textarea>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px">Quick topics:</div>
+      <div class="chips">
+        ${['🍽️ Restaurant','🏠 Real Estate','👗 Fashion','🎉 Events','📱 Tech','📚 Education'].map(c => `<div class="chip" onclick="setTopic('${c.replace(/[^\w ]/g,'').trim()}')">${c}</div>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Target Audience</label>
+      <input type="text" id="wiz-audience" placeholder="E.g. Families in Lagos, ages 25–45" value="${wizData.audience}">
+    </div>
+    <div class="script-box">
+      <div class="sb-hd">
+        <div class="sb-lbl2">AI Script Preview</div>
+        <div class="ai-ind"><div class="dot"></div> Vizora AI</div>
+      </div>
+      <div style="font-size:14px;color:var(--text-mid);line-height:1.7" id="script-preview-text">
+        "${wizData.script || 'Your script will appear here once you describe your topic above...'}"
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;justify-content:center" onclick="generateScript()">↻ Generate Script with AI</button>
+    </div>`;
+
+  if (step === 2) return `
+    <div class="field">
+      <label class="label">Video Format <em>*</em></label>
+      <div class="two-col" style="margin-top:8px">
+        <div class="format-card ${wizData.format==='landscape'?'on':''}" onclick="selFormat('landscape',this)">
+          <div style="display:flex;justify-content:center;margin-bottom:10px;height:56px;align-items:center">
+            <div style="width:76px;height:46px;background:linear-gradient(135deg,var(--teal),#009977);border-radius:6px;opacity:.6"></div>
+          </div>
+          <div style="font-size:13px;font-weight:600">Landscape 16:9</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px">YouTube · LinkedIn</div>
+        </div>
+        <div class="format-card ${wizData.format==='vertical'?'on':''}" onclick="selFormat('vertical',this)">
+          <div style="display:flex;justify-content:center;margin-bottom:10px;height:56px;align-items:center">
+            <div style="width:32px;height:46px;background:linear-gradient(135deg,var(--gold),#C49F00);border-radius:6px;opacity:.6"></div>
+          </div>
+          <div style="font-size:13px;font-weight:600">Vertical 9:16</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px">TikTok · Reels</div>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Visual Style <em>*</em></label>
+      <div class="style-grid">
+        ${[['cinematic','#0D3B2E','#1A6B4A','Cinematic','Bold, professional'],
+           ['vibrant','#1A1A2E','#E94560','Vibrant','Energetic social'],
+           ['minimal','#2C2C2C','#525252','Minimal','Clean luxury'],
+           ['corporate','#1A2E40','#2980B9','Corporate','Trust & authority'],
+           ['warm','#3D1A00','#E67E22','Warm & Local','African warmth'],
+           ['futuristic','#1A002E','#8E44AD','Futuristic','Tech & innovation']
+          ].map(([id,c1,c2,n,d]) => `
+          <div class="scard ${wizData.style===id?'on':''}" onclick="selStyle('${id}',this)">
+            <div class="sprev" style="background:linear-gradient(135deg,${c1},${c2})"></div>
+            <div class="sname">${n}</div><div class="sdesc">${d}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Length</label>
+      <div class="chips">
+        ${['15 seconds','30 seconds','60 seconds'].map(l => `<div class="chip ${wizData.length===l.split(' ')[0]?'on':''}" onclick="selChip(this,'length','${l.split(' ')[0]}')">${l}</div>`).join('')}
+        <div class="chip" onclick="showView('v-pricing')">3 min ✦ Business</div>
+      </div>
+    </div>`;
+
+  if (step === 3) return `
+    <div class="field">
+      <label class="label">Output Language <em>*</em></label>
+      <div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">Voiceover and captions will be generated in this language.</div>
+      <div class="lang-grid">
+        ${[['en','🇳🇬','English','Global · Default'],
+           ['ar','🇸🇦','Arabic','RTL · MENA Region'],
+           ['fr','🇫🇷','French','West Africa'],
+           ['sw','🇰🇪','Swahili','East Africa'],
+           ['id','🇮🇩','Bahasa','Southeast Asia']
+          ].map(([code,flag,name,sub]) => `
+          <div class="lang-i ${wizData.language===code?'on':''}" onclick="selLang('${code}',this)">
+            <div class="lflag">${flag}</div>
+            <div><div class="lname">${name}</div><div class="lsub">${sub}</div></div>
+            <div class="lcheck">✓</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Caption Style</label>
+      <div class="chips">
+        ${['Subtitles (bottom)','No captions','Bold overlay'].map(c => `<div class="chip ${c==='Subtitles (bottom)'?'on':''}" onclick="selChip(this,'caption','${c}')">${c}</div>`).join('')}
+      </div>
+    </div>`;
+
+  if (step === 4) return `
+    <div class="gen-box">
+      <div class="ring">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle class="rt" cx="55" cy="55" r="50"/>
+          <circle class="rf" cx="55" cy="55" r="50" stroke-dashoffset="314" id="ring-fill"/>
+        </svg>
+        <div class="ring-pct" id="ring-pct">0%</div>
+      </div>
+      <div style="font-size:16px;font-weight:500;margin-bottom:6px">Vizora AI is creating your video</div>
+      <div style="font-size:13px;color:var(--text-dim)">Estimated: 45–90 seconds</div>
+      <div class="gen-steps">
+        <div class="gstep done" id="gs1"><div class="gi done">✓</div>Analyzing your brief</div>
+        <div class="gstep on" id="gs2"><div class="gi on"></div>Generating video frames</div>
+        <div class="gstep" id="gs3"><div class="gi wait"></div>Composing audio & voiceover</div>
+        <div class="gstep" id="gs4"><div class="gi wait"></div>Rendering final output</div>
+        <div class="gstep" id="gs5"><div class="gi wait"></div>Ready to publish</div>
+      </div>
+    </div>`;
+
+  if (step === 5) return `
+    <div class="result-box">
+      <div style="font-size:44px;margin-bottom:14px">🎉</div>
+      <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;margin-bottom:8px">Your Video is Ready!</h2>
+      <p style="color:var(--text-mid);font-size:14px;margin-bottom:24px">${wizData.topic.substring(0,40) || 'Your video'} · ${wizData.length}s · ${wizData.format === 'landscape' ? '16:9' : '9:16'}</p>
+      <div class="result-video">
+        ${wizData.videoUrl
+          ? `<video controls src="${wizData.videoUrl}" style="width:100%"></video>`
+          : `<div class="no-video" onclick="window.open('${wizData.videoUrl||'#'}','_blank')">▶</div>`}
+      </div>
+      <div class="pub-btns">
+        ${wizData.videoUrl ? `<a href="${wizData.videoUrl}" download class="btn btn-p">⬇ Download Video</a>` : ''}
+        <button class="btn btn-o" onclick="navigator.clipboard.writeText('${wizData.videoUrl||''}');toast('Link copied!')">🔗 Copy Link</button>
+        <button class="btn btn-ghost" onclick="initWizard()">+ Make Another</button>
+      </div>
+    </div>`;
+}
+
+// ── Wizard selections ─────────────────────────────────
+function setTopic(text) {
+  const ta = document.getElementById('wiz-topic');
+  if (ta) ta.value = text;
+}
+
+async function generateScript() {
+  const topic = document.getElementById('wiz-topic')?.value || wizData.topic;
+  if (!topic.trim()) { toast('Enter a topic first!', 'err'); return; }
+  const preview = document.getElementById('script-preview-text');
+  if (preview) preview.textContent = '"Generating script..."';
+
+  // Use Claude API (via Anthropic) to generate script
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `Write a short, engaging video script (max 50 words) for: "${topic}". 
+Target audience: ${wizData.audience || 'general'}.
+Language: ${wizData.language || 'English'}.
+Style: punchy, emotional, ends with a call to action.
+Return ONLY the script text, no labels or quotes.`
+        }]
+      })
+    });
+    const data = await res.json();
+    const script = data.content?.[0]?.text || `${topic} — your story, brought to life with Vizora AI.`;
+    wizData.script = script;
+    if (preview) preview.textContent = `"${script}"`;
+  } catch (e) {
+    const fallback = `Discover ${topic}. Experience the difference. Visit us today and see why thousands choose us. Don't miss out — your journey starts here.`;
+    wizData.script = fallback;
+    if (preview) preview.textContent = `"${fallback}"`;
+  }
+}
+
+function selFormat(val, el) {
+  wizData.format = val;
+  document.querySelectorAll('.format-card').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selStyle(val, el) {
+  wizData.style = val;
+  document.querySelectorAll('.scard').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selLang(val, el) {
+  wizData.language = val;
+  document.querySelectorAll('.lang-i').forEach(l => l.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selChip(el, field, val) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  if (field === 'length') wizData.length = val;
+}
+
+// ── Wizard navigation ────────────────────────────────
+function wizNext() {
+  // Save step 1 inputs before advancing
+  if (wizStep === 1) {
+    wizData.topic = document.getElementById('wiz-topic')?.value || wizData.topic;
+    wizData.audience = document.getElementById('wiz-audience')?.value || wizData.audience;
+    if (!wizData.topic.trim()) { toast('Please describe your video topic.', 'err'); return; }
+  }
+  // Check credits
+  if (wizStep === 3 && currentUser) {
+    // will be checked server-side via DB; for now proceed
+  }
+  wizStep++;
+  if (wizStep > 5) wizStep = 5;
+  renderWizard();
+}
+
+function wizBack() {
+  wizStep--;
+  if (wizStep < 1) { showDash(); return; }
+  renderWizard();
+}
+
+// ── Video Generation with fal.ai ─────────────────────
+async function runGeneration() {
+  let pct = 0;
+  const ring = document.getElementById('ring-fill');
+  const pctEl = document.getElementById('ring-pct');
+  const circ = 314;
+
+  const milestones = [
+    { pct: 20, delay: 1000, id: 'gs3' },
+    { pct: 55, delay: 3000, id: 'gs4' },
+    { pct: 80, delay: 5000, id: 'gs5' },
+  ];
+
+  // Animate progress ring
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + 0.8, 90);
+    if (ring) ring.style.strokeDashoffset = circ - (pct / 100) * circ;
+    if (pctEl) pctEl.textContent = Math.floor(pct) + '%';
+  }, 400);
+
+  milestones.forEach(m => {
+    setTimeout(() => {
+      const prev = document.querySelector('.gstep.on');
+      if (prev) { prev.classList.remove('on'); prev.classList.add('done'); prev.querySelector('.gi').className='gi done'; prev.querySelector('.gi').textContent='✓'; }
+      const el = document.getElementById(m.id);
+      if (el) { el.classList.add('on'); el.querySelector('.gi').className='gi on'; }
+    }, m.delay);
+  });
+
+  try {
+    // Build prompt for fal.ai / Kling
+    const styleMap = {
+      cinematic: 'cinematic film style, dramatic lighting, professional camera work',
+      vibrant: 'vibrant colors, energetic, fast-paced, social media style',
+      minimal: 'minimal clean aesthetic, luxury feel, elegant composition',
+      corporate: 'professional corporate style, trustworthy, clean background',
+      warm: 'warm African aesthetic, earthy tones, cultural richness',
+      futuristic: 'futuristic tech aesthetic, sleek, neon accents, modern'
+    };
+    const ratio = wizData.format === 'vertical' ? '9:16' : '16:9';
+    const prompt = `${wizData.script || wizData.topic}. ${styleMap[wizData.style] || ''}. High quality, professional video, ${ratio} format.`;
+
+    // Call our secure serverless proxy — FAL_KEY stays on Vercel server
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: prompt,
+        duration: '5',
+        aspect_ratio: ratio
+      })
+    });
+
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const result = await response.json();
+    const videoUrl = result?.video_url || null;
+
+    clearInterval(ticker);
+    if (ring) ring.style.strokeDashoffset = 0;
+    if (pctEl) pctEl.textContent = '100%';
+
+    // Mark all steps done
+    ['gs2','gs3','gs4','gs5'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.className = 'gstep done'; el.querySelector('.gi').className='gi done'; el.querySelector('.gi').textContent='✓'; }
+    });
+
+    wizData.videoUrl = videoUrl;
+
+    // Save to Supabase
+    if (currentUser) {
+      await db.from('videos').insert({
+        user_id: currentUser.id,
+        title: wizData.topic.substring(0, 60) || 'Untitled Video',
+        prompt: prompt,
+        video_url: videoUrl,
+        style: wizData.style,
+        language: wizData.language,
+        format: wizData.format,
+        duration: `0:${wizData.length.padStart(2,'0')}`,
+        status: videoUrl ? 'done' : 'failed',
+        created_at: new Date().toISOString()
+      });
+
+      // Update usage counter
+      await db.rpc('increment_video_count', { user_id_input: currentUser.id });
+    }
+
+    toast('🎬 Video generated successfully!');
+    setTimeout(() => { wizStep = 5; renderWizard(); }, 1000);
+
+  } catch (err) {
+    clearInterval(ticker);
+    console.error('Generation error:', err);
+
+    // If FAL_KEY not configured, show demo result
+    toast('Generation failed. Check your fal.ai credits at fal.ai/dashboard', 'err');
+    wizData.videoUrl = null;
+    setTimeout(() => { wizStep = 5; renderWizard(); }, 1500);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  INIT — Check session on load
+// ══════════════════════════════════════════════
+(async () => {
+  // Skip if keys not configured
+  if (SUPABASE_URL.includes('YOUR_')) return;
+
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    loadDashboard();
+  }
+
+  // Listen for auth changes
+  db.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) {
+      currentUser = session.user;
+    } else {
+      currentUser = null;
+    }
+  });
+})();
+</script>
+</body>
+</html>
