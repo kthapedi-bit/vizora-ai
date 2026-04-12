@@ -55,6 +55,11 @@ body::after{content:'';position:fixed;inset:0;background:url("data:image/svg+xml
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 .btn-full{width:100%;justify-content:center}
 
+/* ── ACCOUNT TYPE TOGGLE ── */
+.acct-type{border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--card)}
+.acct-type:hover{border-color:var(--border-hi)}
+.acct-type.on{border-color:var(--teal);background:var(--teal-soft)}
+
 /* ── INPUTS ── */
 .field{margin-bottom:20px}
 .label{display:block;font-size:13px;font-weight:500;color:var(--text-mid);margin-bottom:7px}
@@ -373,9 +378,57 @@ select option{background:var(--surface)}
 
     <!-- Signup form -->
     <div id="form-signup">
+      <!-- Account type toggle -->
+      <div class="field">
+        <label class="label">Account Type</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+          <div class="acct-type on" id="at-individual" onclick="setAcctType('individual')">
+            <div style="font-size:18px;margin-bottom:4px">👤</div>
+            <div style="font-size:13px;font-weight:600">Individual</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Creator / Freelancer</div>
+          </div>
+          <div class="acct-type" id="at-business" onclick="setAcctType('business')">
+            <div style="font-size:18px;margin-bottom:4px">🏢</div>
+            <div style="font-size:13px;font-weight:600">Business</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Company / Agency</div>
+          </div>
+        </div>
+      </div>
       <div class="field">
         <label class="label">Full Name</label>
         <input type="text" id="su-name" placeholder="Your name" autocomplete="name">
+      </div>
+      <!-- Business fields — shown only for business accounts -->
+      <div id="biz-fields" style="display:none">
+        <div class="field">
+          <label class="label">Company Name</label>
+          <input type="text" id="su-company" placeholder="e.g. MagniProjekta (Pty) Ltd">
+        </div>
+        <div class="field">
+          <label class="label">Industry</label>
+          <select id="su-industry">
+            <option value="">Select industry...</option>
+            <option>Media & Entertainment</option>
+            <option>Real Estate</option>
+            <option>Retail & E-commerce</option>
+            <option>Food & Hospitality</option>
+            <option>Education & Training</option>
+            <option>Technology</option>
+            <option>Marketing & Advertising</option>
+            <option>Finance & Insurance</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Company Size</label>
+          <select id="su-size">
+            <option value="">Select size...</option>
+            <option value="solo">Just me</option>
+            <option value="small">2–10 employees</option>
+            <option value="medium">11–50 employees</option>
+            <option value="large">50+ employees</option>
+          </select>
+        </div>
       </div>
       <div class="field">
         <label class="label">Email Address</label>
@@ -664,6 +717,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 //  STATE
 // ══════════════════════════════════════════════
 let currentUser = null;
+let accountType = 'individual'; // 'individual' or 'business'
 let userVideos = [];
 let wizStep = 1;
 let wizData = { topic: '', audience: '', format: 'landscape', style: 'cinematic', length: '15', language: 'en', script: '' };
@@ -713,6 +767,16 @@ function showAuth(mode) {
   document.getElementById('auth-err').style.display = 'none';
 }
 
+function setAcctType(type) {
+  accountType = type;
+  document.getElementById('at-individual').classList.toggle('on', type === 'individual');
+  document.getElementById('at-business').classList.toggle('on', type === 'business');
+  document.getElementById('biz-fields').style.display = type === 'business' ? 'block' : 'none';
+  // Update plan hint
+  const hint = document.getElementById('acct-hint');
+  if (hint) hint.textContent = type === 'business' ? 'Business accounts get extended video length, team access & serial video continuation.' : '';
+}
+
 function showAuthErr(msg) {
   const el = document.getElementById('auth-err');
   el.textContent = msg;
@@ -723,16 +787,25 @@ async function doSignup() {
   const name = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim();
   const pass = document.getElementById('su-pass').value;
+  const company = document.getElementById('su-company')?.value.trim() || '';
+  const industry = document.getElementById('su-industry')?.value || '';
+  const size = document.getElementById('su-size')?.value || '';
+
   if (!name || !email || !pass) return showAuthErr('Please fill in all fields.');
   if (pass.length < 6) return showAuthErr('Password must be at least 6 characters.');
+  if (accountType === 'business' && !company) return showAuthErr('Please enter your company name.');
+
   setLoading('su-btn', true, 'Creating account...');
-  const { data, error } = await db.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+  const { data, error } = await db.auth.signUp({
+    email, password: pass,
+    options: { data: { full_name: name, account_type: accountType, company_name: company } }
+  });
   setLoading('su-btn', false, 'Create Account →');
   if (error) return showAuthErr(error.message);
   if (data.user) {
     currentUser = data.user;
-    await initUserProfile(data.user, name);
-    toast('Account created! Welcome to Vizora AI 🎉');
+    await initUserProfile(data.user, name, company, industry, size);
+    toast(accountType === 'business' ? '🏢 Business account created! Welcome to Vizora AI.' : '🎉 Account created! Welcome to Vizora AI.');
     loadDashboard();
   }
 }
@@ -758,12 +831,15 @@ async function doLogout() {
   toast('Signed out successfully.');
 }
 
-async function initUserProfile(user, name) {
-  // Create profile row in Supabase
+async function initUserProfile(user, name, company = '', industry = '', size = '') {
   await db.from('profiles').upsert({
     id: user.id,
     full_name: name,
     email: user.email,
+    account_type: accountType,
+    company_name: company,
+    industry: industry,
+    company_size: size,
     plan: 'free',
     videos_this_month: 0,
     videos_total: 0,
@@ -1002,9 +1078,10 @@ function getStepHTML(step) {
       <div style="font-size:13px;color:var(--text-mid);margin-bottom:14px">Voiceover and captions will be generated in this language.</div>
       <div class="lang-grid">
         ${[['en','🇳🇬','English','Global · Default'],
-           ['ar','🇸🇦','Arabic','RTL · MENA Region'],
+           ['ar','🇦🇪','Arabic','UAE · MENA Region'],
            ['fr','🇫🇷','French','West Africa'],
            ['sw','🇰🇪','Swahili','East Africa'],
+           ['zu','🇿🇦','Zulu','South Africa'],
            ['id','🇮🇩','Bahasa','Southeast Asia']
           ].map(([code,flag,name,sub]) => `
           <div class="lang-i ${wizData.language===code?'on':''}" onclick="selLang('${code}',this)">
@@ -1048,13 +1125,32 @@ function getStepHTML(step) {
       <p style="color:var(--text-mid);font-size:14px;margin-bottom:24px">${wizData.topic.substring(0,40) || 'Your video'} · ${wizData.length}s · ${wizData.format === 'landscape' ? '16:9' : '9:16'}</p>
       <div class="result-video">
         ${wizData.videoUrl
-          ? `<video controls src="${wizData.videoUrl}" style="width:100%"></video>`
-          : `<div class="no-video" onclick="window.open('${wizData.videoUrl||'#'}','_blank')">▶</div>`}
+          ? '<video controls src="' + wizData.videoUrl + '" style="width:100%"></video>'
+          : '<div class="no-video">▶ &nbsp;Processing — check My Videos shortly</div>'}
       </div>
       <div class="pub-btns">
-        ${wizData.videoUrl ? `<a href="${wizData.videoUrl}" download class="btn btn-p">⬇ Download Video</a>` : ''}
-        <button class="btn btn-o" onclick="navigator.clipboard.writeText('${wizData.videoUrl||''}');toast('Link copied!')">🔗 Copy Link</button>
+        ${wizData.videoUrl ? '<a href="' + wizData.videoUrl + '" download class="btn btn-p">⬇ Download</a>' : ''}
+        <button class="btn btn-o" onclick="navigator.clipboard.writeText(wizData.videoUrl||'');toast('Link copied!')">🔗 Copy Link</button>
         <button class="btn btn-ghost" onclick="initWizard()">+ Make Another</button>
+      </div>
+      <div style="margin-top:28px;padding:20px;background:var(--card);border:1.5px solid var(--border-hi);border-radius:var(--r);text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:20px">🎙️</span>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Continue this series</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:2px">Generate the next episode — same character, style and tone. No consistency lost.</div>
+          </div>
+          <span style="background:var(--gold-soft);color:var(--gold);font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;white-space:nowrap;flex-shrink:0">✦ Business</span>
+        </div>
+        <textarea id="continuation-prompt" placeholder="What happens next? e.g. Episode 2: The host interviews a local entrepreneur about AI in Africa..." style="min-height:72px;margin-bottom:10px;font-size:13px"></textarea>
+        <div style="display:flex;gap:8px">
+          <select id="continuation-episode" style="flex:1;font-size:13px;padding:10px">
+            <option>Episode 2</option><option>Episode 3</option><option>Episode 4</option>
+            <option>Episode 5</option><option>Episode 6</option><option>Episode 7</option>
+          </select>
+          <button class="btn btn-g" onclick="continueSerialVideo()">▶ Generate Next</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">✓ Same visual style &nbsp;·&nbsp; ✓ Character continuity &nbsp;·&nbsp; ✓ Podcast & series ready</div>
       </div>
     </div>`;
 }
@@ -1248,6 +1344,44 @@ async function runGeneration() {
     wizData.videoUrl = null;
     setTimeout(() => { wizStep = 5; renderWizard(); }, 1500);
   }
+}
+
+// ── Serial Video Continuation ────────────────────
+async function continueSerialVideo() {
+  const prompt = document.getElementById('continuation-prompt')?.value.trim();
+  const episode = document.getElementById('continuation-episode')?.value || 'Episode 2';
+  if (!prompt) { toast('Describe what happens in the next episode.', 'err'); return; }
+
+  // Check if business plan
+  const { data: profile } = await db.from('profiles').select('plan,account_type').eq('id', currentUser.id).single();
+  if (profile?.plan === 'free' || profile?.plan === 'creator') {
+    toast('Serial video continuation is a Business feature. Upgrade to continue.', 'err');
+    setTimeout(() => showView('v-pricing'), 1500);
+    return;
+  }
+
+  toast('🎬 Starting ' + episode + '... maintaining your character & style.');
+
+  // Build continuation prompt — preserves style and character from original
+  const styleMap = {
+    cinematic: 'cinematic film style, dramatic lighting',
+    vibrant: 'vibrant colors, energetic, social media style',
+    minimal: 'minimal clean aesthetic, luxury feel',
+    corporate: 'professional corporate style',
+    warm: 'warm African aesthetic, earthy tones',
+    futuristic: 'futuristic tech aesthetic, sleek'
+  };
+  const continuationPrompt = `${episode} continuation of: "${wizData.topic}". ${prompt}. 
+    IMPORTANT: Maintain exact same visual style (${styleMap[wizData.style]}), 
+    same character appearance, same color palette, same tone as the previous episode.
+    This is a seamless continuation — do not introduce new characters or change the aesthetic.`;
+
+  wizData.topic = `${wizData.topic} — ${episode}`;
+  wizData.script = continuationPrompt;
+
+  // Go back to generation step
+  wizStep = 4;
+  renderWizard();
 }
 
 // ══════════════════════════════════════════════
