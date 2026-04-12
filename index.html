@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,44 +96,131 @@ select option{background:var(--surface)}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
 /* ══════════════════
-   LANDING
+   LANDING — CINEMATIC FILM STUDIO
 ══════════════════ */
-#v-land{background:var(--ink);overflow:hidden;position:relative}
-.orbs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(130px);animation:drift 9s ease-in-out infinite alternate}
-.o1{width:500px;height:500px;background:var(--teal);opacity:.12;top:-150px;right:-100px}
-.o2{width:450px;height:450px;background:var(--gold);opacity:.1;bottom:-120px;left:-120px;animation-delay:-4s}
-.o3{width:280px;height:280px;background:var(--coral);opacity:.07;top:45%;left:35%;animation-delay:-7s}
-@keyframes drift{to{transform:translate(25px,-18px) scale(1.04)}}
+#v-land{background:#04060F;overflow:hidden;position:relative;min-height:100vh}
 
-.land-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 44px;position:relative;z-index:2}
+/* Studio floor — perspective grid */
+.studio-floor{position:absolute;bottom:0;left:0;right:0;height:55%;pointer-events:none;overflow:hidden}
+.studio-floor::before{content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(0,212,170,.06) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(0,212,170,.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  transform:perspective(600px) rotateX(60deg) scale(1.8) translateY(10%);
+  transform-origin:50% 100%;
+  animation:gridScroll 8s linear infinite;
+}
+.studio-floor::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,#04060F 0%,transparent 60%,#04060F 100%);
+}
+@keyframes gridScroll{from{background-position:0 0}to{background-position:0 60px}}
+
+/* Spotlight beams — cinema magic */
+.beam{position:absolute;top:0;pointer-events:none;transform-origin:top center}
+.beam-1{left:15%;width:180px;height:70vh;
+  background:linear-gradient(180deg,rgba(0,212,170,.18) 0%,rgba(0,212,170,.04) 60%,transparent 100%);
+  clip-path:polygon(30% 0%,70% 0%,100% 100%,0% 100%);
+  animation:beamSway1 7s ease-in-out infinite alternate;filter:blur(2px)}
+.beam-2{left:45%;width:240px;height:80vh;
+  background:linear-gradient(180deg,rgba(245,200,66,.22) 0%,rgba(245,200,66,.06) 55%,transparent 100%);
+  clip-path:polygon(25% 0%,75% 0%,100% 100%,0% 100%);
+  animation:beamSway2 9s ease-in-out infinite alternate;filter:blur(1px)}
+.beam-3{right:12%;width:160px;height:65vh;
+  background:linear-gradient(180deg,rgba(255,107,91,.14) 0%,rgba(255,107,91,.03) 60%,transparent 100%);
+  clip-path:polygon(28% 0%,72% 0%,100% 100%,0% 100%);
+  animation:beamSway3 11s ease-in-out infinite alternate;filter:blur(3px)}
+@keyframes beamSway1{from{transform:rotate(-4deg) translateX(-10px)}to{transform:rotate(4deg) translateX(10px)}}
+@keyframes beamSway2{from{transform:rotate(-2deg)}to{transform:rotate(3deg)}}
+@keyframes beamSway3{from{transform:rotate(5deg)}to{transform:rotate(-3deg)}}
+
+/* Spot source glow at top */
+.spot-source{position:absolute;top:-20px;pointer-events:none}
+.ss1{left:calc(15% + 50px);width:100px;height:40px;background:radial-gradient(ellipse,rgba(0,212,170,.9),transparent 70%);filter:blur(8px);animation:flicker1 4s ease-in-out infinite}
+.ss2{left:calc(45% + 70px);width:130px;height:50px;background:radial-gradient(ellipse,rgba(245,200,66,.95),transparent 70%);filter:blur(10px);animation:flicker2 5s ease-in-out infinite}
+.ss3{right:calc(12% + 40px);width:90px;height:35px;background:radial-gradient(ellipse,rgba(255,140,120,.8),transparent 70%);filter:blur(8px);animation:flicker1 6s ease-in-out 1s infinite}
+@keyframes flicker1{0%,100%{opacity:1}45%{opacity:.85}50%{opacity:.95}55%{opacity:.8}}
+@keyframes flicker2{0%,100%{opacity:1}30%{opacity:.9}60%{opacity:.85}80%{opacity:.95}}
+
+/* Camera rigs SVG — left and right */
+.cam-rig{position:absolute;pointer-events:none;z-index:1}
+.cam-left{bottom:28%;left:3%;animation:camBob 6s ease-in-out infinite}
+.cam-right{bottom:32%;right:2%;animation:camBob 8s ease-in-out infinite reverse;transform:scaleX(-1)}
+@keyframes camBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.cam-right-wrap{transform:scaleX(-1);position:absolute;bottom:32%;right:2%}
+
+/* Ambient fog particles */
+.fog{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fog-p{position:absolute;border-radius:50%;filter:blur(60px);animation:fogDrift linear infinite}
+.fp1{width:300px;height:200px;background:rgba(0,212,170,.04);top:30%;left:-5%;animation-duration:20s}
+.fp2{width:400px;height:250px;background:rgba(245,200,66,.03);top:40%;right:-10%;animation-duration:25s;animation-delay:-8s}
+.fp3{width:200px;height:150px;background:rgba(255,107,91,.03);bottom:20%;left:30%;animation-duration:18s;animation-delay:-4s}
+@keyframes fogDrift{0%{transform:translateX(0) translateY(0)}50%{transform:translateX(40px) translateY(-20px)}100%{transform:translateX(0) translateY(0)}}
+
+/* Lens flare dots */
+.flare{position:absolute;border-radius:50%;pointer-events:none;animation:flarePulse 3s ease-in-out infinite}
+.fl1{width:6px;height:6px;background:var(--teal);top:8%;left:17%;box-shadow:0 0 20px 8px rgba(0,212,170,.6);animation-delay:0s}
+.fl2{width:8px;height:8px;background:var(--gold);top:6%;left:49%;box-shadow:0 0 24px 10px rgba(245,200,66,.7);animation-delay:-1.5s}
+.fl3{width:5px;height:5px;background:#FF9080;top:9%;right:14%;box-shadow:0 0 18px 7px rgba(255,140,120,.5);animation-delay:-3s}
+@keyframes flarePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.7)}}
+
+/* CLAPPER BOARD — floating left */
+.clapper{position:absolute;left:6%;top:50%;transform:translateY(-50%);pointer-events:none;z-index:2;animation:clapperFloat 7s ease-in-out infinite}
+@keyframes clapperFloat{0%,100%{transform:translateY(-50%) rotate(-2deg)}50%{transform:translateY(calc(-50% - 12px)) rotate(1deg)}}
+
+/* FILM STRIP — bottom decoration */
+.filmstrip{position:absolute;bottom:0;left:0;right:0;height:28px;display:flex;gap:0;pointer-events:none;z-index:3;opacity:.4}
+.frame{flex:1;border:1px solid rgba(255,255,255,.08);border-bottom:none;min-width:32px;position:relative}
+.frame::before{content:'';position:absolute;top:4px;left:3px;right:3px;bottom:4px;
+  background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border-radius:2px}
+
+/* NAV */
+.land-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 44px;position:relative;z-index:10}
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer}
 .logo-m{width:34px;height:34px;background:linear-gradient(135deg,var(--teal),var(--gold));border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--ink)}
 .logo-t{font-family:'Syne',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.4px}
 .logo-t span{color:var(--teal)}
 
-.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px 64px;position:relative;z-index:2}
-.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.2);color:var(--teal);padding:5px 15px;border-radius:100px;font-size:12px;font-weight:500;margin-bottom:28px;animation:fadeUp .5s ease both}
-.dot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* HERO */
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px 80px;position:relative;z-index:5}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7);padding:6px 18px;border-radius:100px;font-size:12px;font-weight:400;letter-spacing:.5px;margin-bottom:32px;animation:fadeUp .5s ease both;backdrop-filter:blur(8px)}
+.badge-rec{width:7px;height:7px;background:var(--coral);border-radius:50%;animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(38px,6vw,76px);line-height:1.06;letter-spacing:-2px;margin-bottom:20px;animation:fadeUp .6s .08s ease both}
-.tc{color:var(--teal)}.gc{color:var(--gold)}
-.hero p{font-size:17px;color:var(--text-mid);max-width:520px;line-height:1.65;margin-bottom:36px;font-weight:300;animation:fadeUp .6s .16s ease both}
-.hero-cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .24s ease both}
-.hero-stats{display:flex;gap:44px;margin-top:56px;animation:fadeUp .6s .32s ease both;flex-wrap:wrap;justify-content:center}
-.stat .n{font-family:'Syne',sans-serif;font-weight:800;font-size:26px}
-.stat .l{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(40px,6.5vw,88px);line-height:1.0;letter-spacing:-3px;margin-bottom:24px;animation:fadeUp .6s .1s ease both;text-shadow:0 0 80px rgba(0,212,170,.15)}
+.tc{color:var(--teal)}.gc{color:var(--gold)}.wc{color:#fff}
+.hero-sub{font-size:16px;color:rgba(255,255,255,.45);max-width:480px;line-height:1.7;margin-bottom:40px;font-weight:300;animation:fadeUp .6s .2s ease both;letter-spacing:.2px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .3s ease both}
 
-/* floating badges */
-.fbadge{position:absolute;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:12px;animation:float 6s ease-in-out infinite;box-shadow:0 6px 24px rgba(0,0,0,.4)}
-.fb1{top:22%;left:4%;animation-delay:0s}
-.fb2{top:28%;right:4%;animation-delay:-2.5s}
+/* Rolling market ticker */
+.market-ticker{position:relative;overflow:hidden;width:100%;margin-top:52px;animation:fadeUp .6s .4s ease both}
+.ticker-track{display:flex;gap:0;animation:tickerScroll 22s linear infinite;width:max-content}
+.ticker-item{display:flex;align-items:center;gap:8px;padding:8px 24px;white-space:nowrap;font-size:12px;color:rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.06)}
+.ticker-icon{font-size:14px}
+.ticker-label{font-weight:500;color:rgba(255,255,255,.5)}
+.market-ticker::before,.market-ticker::after{content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none}
+.market-ticker::before{left:0;background:linear-gradient(to right,#04060F,transparent)}
+.market-ticker::after{right:0;background:linear-gradient(to left,#04060F,transparent)}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Stats row */
+.hero-stats{display:flex;gap:0;margin-top:0;flex-wrap:wrap;justify-content:center;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);width:100%;max-width:640px}
+.stat{padding:20px 32px;border-right:1px solid rgba(255,255,255,.06);flex:1;min-width:120px}
+.stat:last-child{border-right:none}
+.stat .n{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:#fff}
+.stat .l{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px}
+
+/* Floating status cards */
+.fbadge{position:absolute;background:rgba(13,20,38,.85);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:12px 16px;font-size:12px;animation:float 7s ease-in-out infinite;box-shadow:0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(12px);z-index:6}
+.fb1{top:24%;left:3%;animation-delay:0s}
+.fb2{top:22%;right:3%;animation-delay:-3s}
+.fb3{bottom:22%;left:5%;animation-delay:-5s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.ftag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:4px}
+.ftag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:5px}
 .ftag-t{background:rgba(0,212,170,.15);color:var(--teal)}
 .ftag-g{background:rgba(245,200,66,.15);color:var(--gold)}
+.ftag-r{background:rgba(255,107,91,.15);color:var(--coral)}
 
 /* ══════════════════
    AUTH
@@ -313,53 +399,475 @@ select option{background:var(--surface)}
 <div id="toast"></div>
 
 <!-- ══════════════════════════════
-     LANDING
+     CHARACTER LOG VIEW
+══════════════════════════════ -->
+<div id="v-characters" class="view" style="flex-direction:row;background:var(--ink)">
+  <aside class="sidebar">
+    <div class="sb-head"><div class="logo"><div class="logo-m">V</div><div class="logo-t">Vizora<span>AI</span></div></div></div>
+    <div class="sb-sect">
+      <div class="sb-lbl">Main</div>
+      <div class="nav-i" onclick="loadDashboard()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-i on">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Characters
+      </div>
+      <div class="nav-i" onclick="showStudioBuilder()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Studio Builder
+      </div>
+    </div>
+  </aside>
+  <div class="main-area">
+    <div class="topbar">
+      <div>
+        <h2>Character Log</h2>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:1px">Design and save your primary characters for consistent video series</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="showNewCharacterModal()">+ New Character</button>
+    </div>
+    <div class="content">
+
+      <!-- How it works -->
+      <div style="background:linear-gradient(135deg,rgba(0,212,170,0.06),rgba(245,200,66,0.03));border:1.5px solid var(--border-hi);border-radius:var(--r);padding:20px 24px;margin-bottom:28px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:10px">How Character Log works</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:13px;color:var(--text-mid)">
+          <div><div style="font-size:20px;margin-bottom:6px">🎨</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">1. Design</div>Describe your character's look, personality and role</div>
+          <div><div style="font-size:20px;margin-bottom:6px">💾</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">2. Save</div>Character is stored in your log with a visual reference</div>
+          <div><div style="font-size:20px;margin-bottom:6px">🎬</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">3. Use</div>Select characters when creating videos — they stay consistent</div>
+          <div><div style="font-size:20px;margin-bottom:6px">📺</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">4. Series</div>Use in Episode 1, 2, 3... same character, no drift</div>
+        </div>
+      </div>
+
+      <!-- Example use cases -->
+      <div class="sec-hd"><div class="sec-t">Use Case Examples</div></div>
+      <div class="qa-grid" style="margin-bottom:28px">
+        <div class="card qa-card" onclick="showNewCharacterModal('Sport Podcast Host — Male, 30s, African, confident presenter in a modern studio wearing casual blazer')">
+          <div class="qa-icon ic-t">⚽</div>
+          <h3>Sport Podcast Host</h3>
+          <p>Create a recurring host for your World Cup podcast series. Same face, same energy every episode.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to use this template →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewCharacterModal('Fashion Model — Female, 20s, wearing brand clothing in a clean studio with brand colors as background')">
+          <div class="qa-icon ic-g">👗</div>
+          <h3>Fashion Brand Model</h3>
+          <p>Log your brand model once. Use her across all seasonal collections and lookbooks.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to use this template →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewCharacterModal('Interior Design Presenter — professional, standing in a luxury living room presenting furniture')">
+          <div class="qa-icon ic-c">🏠</div>
+          <h3>Interior Design Host</h3>
+          <p>Present different room designs with the same character — swap the room, keep the presenter.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to use this template →</div>
+        </div>
+      </div>
+
+      <!-- Saved characters grid -->
+      <div class="sec-hd"><div class="sec-t">Your Characters</div></div>
+      <div id="characters-grid">
+        <div style="text-align:center;padding:48px;color:var(--text-dim)">
+          <div style="font-size:40px;margin-bottom:14px">🎭</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No characters yet</div>
+          <div style="font-size:13px;margin-bottom:20px">Create your first character to start building consistent video series</div>
+          <button class="btn btn-p" onclick="showNewCharacterModal()">+ Create First Character</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Character Modal -->
+<div id="modal-character" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1.5px solid var(--border-hi);border-radius:var(--r);padding:32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px">New Character</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeCharacterModal()">✕</button>
+    </div>
+    <div class="field">
+      <label class="label">Character Name <em>*</em></label>
+      <input type="text" id="char-name" placeholder="e.g. Kwame — Sport Podcast Host">
+    </div>
+    <div class="field">
+      <label class="label">Role / Series</label>
+      <input type="text" id="char-role" placeholder="e.g. Host of The World Cup Weekly Podcast">
+    </div>
+    <div class="field">
+      <label class="label">Visual Description <em>*</em></label>
+      <textarea id="char-desc" style="min-height:90px" placeholder="Describe exactly how this character looks: age, ethnicity, hair, clothing style, facial features, expression...&#10;&#10;e.g. African male, early 30s, athletic build, short natural hair, confident warm smile, wearing a navy blazer over a white shirt, holding a microphone"></textarea>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">The more detail you add, the more consistent this character will be across videos.</div>
+    </div>
+    <div class="field">
+      <label class="label">Personality & Tone</label>
+      <div class="chips" style="margin-top:4px">
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Energetic</div>
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Professional</div>
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Warm & Friendly</div>
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Authoritative</div>
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Playful</div>
+        <div class="chip" onclick="toggleChip(this,'char-personality')">Sophisticated</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Character Type</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div class="format-card on" id="ctype-human" onclick="selCharType('human',this)">
+          <div style="font-size:20px;margin-bottom:4px">👤</div>
+          <div style="font-size:13px;font-weight:600">Human</div>
+          <div style="font-size:11px;color:var(--text-dim)">Realistic person</div>
+        </div>
+        <div class="format-card" id="ctype-avatar" onclick="selCharType('avatar',this)">
+          <div style="font-size:20px;margin-bottom:4px">🤖</div>
+          <div style="font-size:13px;font-weight:600">AI Avatar</div>
+          <div style="font-size:11px;color:var(--text-dim)">Stylized / animated</div>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Primary Use</label>
+      <select id="char-use">
+        <option value="podcast">Podcast / Talk Show</option>
+        <option value="fashion">Fashion & Lifestyle</option>
+        <option value="interior">Interior Design</option>
+        <option value="sport">Sport Coverage</option>
+        <option value="education">Education & Training</option>
+        <option value="marketing">Marketing & Ads</option>
+        <option value="corporate">Corporate Communications</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeCharacterModal()">Cancel</button>
+      <button class="btn btn-p" style="flex:2;justify-content:center" onclick="saveCharacter()">💾 Save Character</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     STUDIO BUILDER VIEW
+══════════════════════════════ -->
+<div id="v-studio" class="view" style="flex-direction:row;background:var(--ink)">
+  <aside class="sidebar">
+    <div class="sb-head"><div class="logo"><div class="logo-m">V</div><div class="logo-t">Vizora<span>AI</span></div></div></div>
+    <div class="sb-sect">
+      <div class="sb-lbl">Main</div>
+      <div class="nav-i" onclick="loadDashboard()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-i" onclick="showCharacterLog()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Characters
+      </div>
+      <div class="nav-i on">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Studio Builder
+      </div>
+    </div>
+  </aside>
+  <div class="main-area">
+    <div class="topbar">
+      <div>
+        <h2>Studio Builder</h2>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:1px">Design and save your visual environments — swap content, keep the studio</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="showNewStudioModal()">+ New Studio</button>
+    </div>
+    <div class="content">
+
+      <!-- How it works -->
+      <div style="background:linear-gradient(135deg,rgba(245,200,66,0.06),rgba(0,212,170,0.03));border:1.5px solid var(--border-hi);border-radius:var(--r);padding:20px 24px;margin-bottom:28px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:10px">How Studio Builder works</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;font-size:13px;color:var(--text-mid)">
+          <div><div style="font-size:20px;margin-bottom:6px">🏗️</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">1. Build</div>Design your studio — podcast set, fashion showroom, living room, outdoor</div>
+          <div><div style="font-size:20px;margin-bottom:6px">📸</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">2. Upload</div>Add real photos of your studio, store or room as reference</div>
+          <div><div style="font-size:20px;margin-bottom:6px">🔄</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">3. Swap</div>Change items inside (furniture, clothes, products) without rebuilding</div>
+          <div><div style="font-size:20px;margin-bottom:6px">🎬</div><div style="font-weight:600;color:var(--text);margin-bottom:3px">4. Shoot</div>Place characters in your studio to create videos</div>
+        </div>
+      </div>
+
+      <!-- Studio types -->
+      <div class="sec-hd"><div class="sec-t">Studio Templates</div></div>
+      <div class="qa-grid" style="margin-bottom:28px">
+        <div class="card qa-card" onclick="showNewStudioModal('podcast')">
+          <div class="qa-icon ic-t">🎙️</div>
+          <h3>Podcast Studio</h3>
+          <p>Professional talk show set with branded backdrop, desk, microphones and studio lighting.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewStudioModal('fashion')">
+          <div class="qa-icon ic-g">👗</div>
+          <h3>Fashion Showroom</h3>
+          <p>Clean white or branded studio for clothing. Upload your actual store or use a virtual showroom.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewStudioModal('interior')">
+          <div class="qa-icon ic-c">🛋️</div>
+          <h3>Interior Room</h3>
+          <p>Log a room layout once. Swap furniture, paint colors and decor across client presentations.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewStudioModal('outdoor')">
+          <div class="qa-icon ic-t">🌍</div>
+          <h3>Outdoor / Location</h3>
+          <p>Stadium, city street, beach, savanna — set a scene and shoot content in it repeatedly.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewStudioModal('ecommerce')">
+          <div class="qa-icon ic-g">🛍️</div>
+          <h3>Product Studio</h3>
+          <p>Swap products on the same clean background. Ideal for e-commerce and social ads.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+        <div class="card qa-card" onclick="showNewStudioModal('custom')">
+          <div class="qa-icon ic-c">⚙️</div>
+          <h3>Custom Studio</h3>
+          <p>Describe exactly what you need. Upload photos of your real space as reference.</p>
+          <div style="margin-top:10px;font-size:11px;color:var(--teal)">Click to build →</div>
+        </div>
+      </div>
+
+      <!-- Saved studios -->
+      <div class="sec-hd"><div class="sec-t">Your Studios</div></div>
+      <div id="studios-grid">
+        <div style="text-align:center;padding:48px;color:var(--text-dim)">
+          <div style="font-size:40px;margin-bottom:14px">🎬</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No studios yet</div>
+          <div style="font-size:13px;margin-bottom:20px">Build your first studio to start creating consistent branded environments</div>
+          <button class="btn btn-g" onclick="showNewStudioModal()">🏗️ Build First Studio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Studio Modal -->
+<div id="modal-studio" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1.5px solid var(--border-hi);border-radius:var(--r);padding:32px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px">Build Studio</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeStudioModal()">✕</button>
+    </div>
+    <div class="field">
+      <label class="label">Studio Name <em>*</em></label>
+      <input type="text" id="studio-name" placeholder="e.g. The World Cup Weekly Studio">
+    </div>
+    <div class="field">
+      <label class="label">Studio Type</label>
+      <select id="studio-type">
+        <option value="podcast">Podcast / Talk Show</option>
+        <option value="fashion">Fashion Showroom</option>
+        <option value="interior">Interior Room</option>
+        <option value="outdoor">Outdoor / Location</option>
+        <option value="ecommerce">Product Studio</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="label">Environment Description <em>*</em></label>
+      <textarea id="studio-desc" style="min-height:100px" placeholder="Describe the visual space in detail:&#10;&#10;e.g. Modern sports broadcast studio with two leather chairs facing each other, large LED screen showing football highlights in background, soft studio lighting with warm tones, MagniProjekta branded elements on the wall, dark navy and gold color scheme"></textarea>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">Include: lighting, colors, furniture, brand elements, camera angle preference</div>
+    </div>
+    <div class="field">
+      <label class="label">Swappable Elements</label>
+      <textarea id="studio-swappable" style="min-height:60px" placeholder="What will change between videos? e.g. Products on the shelf, outfit on the mannequin, artwork on the wall, screen content..."></textarea>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">These elements can be changed per video without rebuilding the whole studio.</div>
+    </div>
+    <div class="field">
+      <label class="label">Upload Reference Photos (optional)</label>
+      <div style="border:2px dashed var(--border);border-radius:var(--rs);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s" onclick="document.getElementById('studio-photos').click()" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:24px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;color:var(--text-mid)">Upload photos of your real store, room or space</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">JPG, PNG · Up to 5 photos · AI will replicate the style</div>
+        <input type="file" id="studio-photos" multiple accept="image/*" style="display:none" onchange="previewStudioPhotos(this)">
+      </div>
+      <div id="studio-photo-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+    </div>
+    <div class="field">
+      <label class="label">Brand Colors</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+        <div>
+          <label style="font-size:11px;color:var(--text-dim);margin-bottom:4px;display:block">Primary color</label>
+          <input type="color" id="studio-color1" value="#00D4AA" style="width:100%;height:40px;padding:4px;cursor:pointer">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-dim);margin-bottom:4px;display:block">Accent color</label>
+          <input type="color" id="studio-color2" value="#F5C842" style="width:100%;height:40px;padding:4px;cursor:pointer">
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeStudioModal()">Cancel</button>
+      <button class="btn btn-g" style="flex:2;justify-content:center" onclick="saveStudio()">🏗️ Save Studio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     LANDING — CINEMATIC FILM STUDIO
 ══════════════════════════════ -->
 <div id="v-land" class="view show">
-  <div class="orbs">
-    <div class="orb o1"></div>
-    <div class="orb o2"></div>
-    <div class="orb o3"></div>
+
+  <!-- Studio floor grid -->
+  <div class="studio-floor"></div>
+
+  <!-- Spotlight beams -->
+  <div class="beam beam-1"></div>
+  <div class="beam beam-2"></div>
+  <div class="beam beam-3"></div>
+
+  <!-- Spot source glows -->
+  <div class="spot-source ss1"></div>
+  <div class="spot-source ss2"></div>
+  <div class="spot-source ss3"></div>
+
+  <!-- Lens flares at spotlight sources -->
+  <div class="flare fl1"></div>
+  <div class="flare fl2"></div>
+  <div class="flare fl3"></div>
+
+  <!-- Fog -->
+  <div class="fog">
+    <div class="fog-p fp1"></div>
+    <div class="fog-p fp2"></div>
+    <div class="fog-p fp3"></div>
   </div>
 
-  <!-- Floating context cards -->
-  <div class="fbadge fb1" style="z-index:2">
+  <!-- Camera Rig — Left -->
+  <div class="cam-rig cam-left">
+    <svg width="90" height="130" viewBox="0 0 90 130" fill="none" opacity=".55">
+      <!-- Tripod legs -->
+      <line x1="45" y1="70" x2="10" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="70" x2="45" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="70" x2="80" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Cross brace -->
+      <line x1="22" y1="100" x2="68" y2="100" stroke="#2A3A4A" stroke-width="1.5"/>
+      <!-- Head -->
+      <rect x="28" y="58" width="34" height="16" rx="3" fill="#1A2840" stroke="#2E4060" stroke-width="1.5"/>
+      <!-- Camera body -->
+      <rect x="22" y="32" width="46" height="30" rx="5" fill="#131D36" stroke="#2E4060" stroke-width="1.5"/>
+      <!-- Lens barrel -->
+      <ellipse cx="45" cy="47" rx="13" ry="13" fill="#0A1020" stroke="#2E4060" stroke-width="2"/>
+      <ellipse cx="45" cy="47" rx="8" ry="8" fill="#060C18" stroke="#1A2840" stroke-width="1.5"/>
+      <ellipse cx="45" cy="47" rx="4" ry="4" fill="#00D4AA" opacity=".3"/>
+      <!-- Lens extension -->
+      <rect x="12" y="40" width="12" height="14" rx="2" fill="#0D1830" stroke="#2A3A50" stroke-width="1"/>
+      <!-- REC light -->
+      <circle cx="60" cy="35" r="3" fill="#FF6B5B" opacity=".9">
+        <animate attributeName="opacity" values=".9;.2;.9" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Handle -->
+      <rect x="62" y="33" width="8" height="20" rx="3" fill="#1A2840" stroke="#2E4060" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <!-- Camera Rig — Right (mirrored) -->
+  <div style="position:absolute;bottom:30%;right:3%;animation:camBob 8s ease-in-out infinite reverse;z-index:1">
+    <svg width="80" height="110" viewBox="0 0 90 130" fill="none" opacity=".4" style="transform:scaleX(-1)">
+      <line x1="45" y1="70" x2="10" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="70" x2="45" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="45" y1="70" x2="80" y2="125" stroke="#334" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="22" y1="100" x2="68" y2="100" stroke="#2A3A4A" stroke-width="1.5"/>
+      <rect x="28" y="58" width="34" height="16" rx="3" fill="#1A2840" stroke="#2E4060" stroke-width="1.5"/>
+      <rect x="22" y="32" width="46" height="30" rx="5" fill="#131D36" stroke="#2E4060" stroke-width="1.5"/>
+      <ellipse cx="45" cy="47" rx="13" ry="13" fill="#0A1020" stroke="#2E4060" stroke-width="2"/>
+      <ellipse cx="45" cy="47" rx="8" ry="8" fill="#060C18" stroke="#1A2840" stroke-width="1.5"/>
+      <ellipse cx="45" cy="47" rx="4" ry="4" fill="#F5C842" opacity=".3"/>
+      <rect x="12" y="40" width="12" height="14" rx="2" fill="#0D1830" stroke="#2A3A50" stroke-width="1"/>
+      <circle cx="60" cy="35" r="3" fill="#F5C842" opacity=".8">
+        <animate attributeName="opacity" values=".8;.2;.8" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+
+  <!-- Clapper board — floating -->
+  <div class="clapper">
+    <svg width="72" height="72" viewBox="0 0 80 80" fill="none" opacity=".6">
+      <!-- Board body -->
+      <rect x="4" y="22" width="72" height="54" rx="4" fill="#131D36" stroke="#2E4060" stroke-width="2"/>
+      <!-- Stripes top -->
+      <rect x="4" y="8" width="72" height="16" rx="4" fill="#1A2840" stroke="#2E4060" stroke-width="1.5"/>
+      <rect x="14" y="8" width="10" height="16" fill="#F5C842" opacity=".7"/>
+      <rect x="34" y="8" width="10" height="16" fill="#F5C842" opacity=".7"/>
+      <rect x="54" y="8" width="10" height="16" fill="#F5C842" opacity=".7"/>
+      <!-- Text lines on board -->
+      <rect x="12" y="32" width="30" height="3" rx="1" fill="#2E4060"/>
+      <rect x="12" y="40" width="20" height="3" rx="1" fill="#2E4060"/>
+      <rect x="12" y="48" width="25" height="3" rx="1" fill="#2E4060"/>
+      <!-- V logo on clapper -->
+      <text x="48" y="56" font-family="Arial" font-weight="800" font-size="18" fill="#00D4AA" opacity=".8">V</text>
+    </svg>
+  </div>
+
+  <!-- Film strip bottom -->
+  <div class="filmstrip" id="filmstrip"></div>
+
+  <!-- Floating live badges -->
+  <div class="fbadge fb1">
+    <div class="ftag ftag-r">● LIVE REC</div>
+    <div style="font-size:13px;color:#fff;font-weight:600">Music Video · London</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px">Independent artist · 4K · 60s</div>
+  </div>
+  <div class="fbadge fb2">
+    <div class="ftag ftag-g">⚡ Rendering</div>
+    <div style="font-size:13px;color:#fff;font-weight:600">Fashion Lookbook · Tokyo</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px">Character locked · Studio set</div>
+  </div>
+  <div class="fbadge fb3">
     <div class="ftag ftag-t">✓ Published</div>
-    <div style="font-size:13px;color:var(--text);font-weight:500">Restaurant Promo · Lagos</div>
-    <div style="font-size:11px;color:var(--text-dim);margin-top:3px">3,200 views on TikTok</div>
-  </div>
-  <div class="fbadge fb2" style="z-index:2">
-    <div class="ftag ftag-g">⚡ Generating</div>
-    <div style="font-size:13px;color:var(--text);font-weight:500">Real Estate · Cairo</div>
-    <div style="font-size:11px;color:var(--text-dim);margin-top:3px">60 sec · Arabic · 4K</div>
+    <div style="font-size:13px;color:#fff;font-weight:600">DJ Set Promo · Berlin</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px">12.4K views · TikTok + Reels</div>
   </div>
 
-  <nav class="land-nav" style="position:relative;z-index:3">
+  <!-- NAV -->
+  <nav class="land-nav">
     <div class="logo">
       <div class="logo-m">V</div>
       <div class="logo-t">Vizora<span>AI</span></div>
     </div>
-    <div style="display:flex;gap:12px;align-items:center">
-      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Sign In</button>
-      <button class="btn btn-p btn-sm" onclick="showAuth('signup')">Get Started Free</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')" style="border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)">Sign In</button>
+      <button class="btn btn-p btn-sm" onclick="showAuth('signup')">Start Free →</button>
     </div>
   </nav>
 
+  <!-- HERO -->
   <div class="hero">
-    <div class="badge"><div class="dot"></div>Built for Africa, MENA & Emerging Markets</div>
-    <h1>Turn Ideas Into<br><span class="tc">Viral Videos</span><br>in <span class="gc">60 Seconds</span></h1>
-    <p>AI video creation for SMEs and creators. No camera. No studio. No technical skills. Your idea — Vizora does the rest.</p>
-    <div class="hero-cta">
-      <button class="btn btn-p btn-lg" onclick="showAuth('signup')">▶ &nbsp;Create Free Video</button>
-      <button class="btn btn-o btn-lg" onclick="showView('v-pricing')">View Plans</button>
+    <div class="badge">
+      <div class="badge-rec"></div>
+      For World Markets · Art Studios · Fashion · Music · Sport
     </div>
-    <div class="hero-stats">
-      <div class="stat"><div class="n">50K+</div><div class="l">Creators</div></div>
-      <div class="stat"><div class="n">5</div><div class="l">Languages</div></div>
+
+    <h1><span class="wc">Your Studio.</span><br><span class="tc">Your Characters.</span><br><span class="gc">Your World.</span></h1>
+
+    <p class="hero-sub">The AI video platform built for creators who refuse to be limited. Musicians in London, DJs in Berlin, fashion houses in Tokyo, entrepreneurs in Lagos — one platform, infinite possibilities.</p>
+
+    <div class="hero-cta">
+      <button class="btn btn-p btn-lg" onclick="showAuth('signup')" style="padding:16px 36px;font-size:16px;letter-spacing:.3px">
+        ▶ &nbsp;Enter the Studio
+      </button>
+      <button class="btn btn-lg" onclick="showView('v-pricing')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);padding:16px 28px;font-size:15px">
+        View Pricing
+      </button>
+    </div>
+
+    <!-- Rolling market ticker -->
+    <div class="market-ticker" style="margin-top:48px;max-width:800px">
+      <div class="ticker-track" id="ticker-track">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats" style="margin-top:36px">
       <div class="stat"><div class="n">200+</div><div class="l">Templates</div></div>
-      <div class="stat"><div class="n">60s</div><div class="l">Avg Time</div></div>
+      <div class="stat"><div class="n">6</div><div class="l">Languages</div></div>
+      <div class="stat"><div class="n">60s</div><div class="l">Generate Time</div></div>
+      <div class="stat"><div class="n">4K</div><div class="l">Output Quality</div></div>
     </div>
   </div>
+
 </div>
 
 <!-- ══════════════════════════════
@@ -445,6 +953,18 @@ select option{background:var(--surface)}
 
     <!-- Login form -->
     <div id="form-login" style="display:none">
+      <!-- MagniProjekta SSO -->
+      <div style="background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(245,200,66,0.05));border:1.5px solid var(--teal);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;cursor:pointer" onclick="doMagniLogin()">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--teal),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--ink);flex-shrink:0">M</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Continue as MagniProjekta</div>
+            <div style="font-size:11px;color:var(--text-dim)">k.thapedi@magniprojekta.com · Business Account</div>
+          </div>
+          <div style="margin-left:auto;color:var(--teal);font-size:18px">→</div>
+        </div>
+      </div>
+      <div class="auth-divider">or sign in with email</div>
       <div class="field">
         <label class="label">Email Address</label>
         <input type="email" id="li-email" placeholder="you@email.com" autocomplete="email">
@@ -493,6 +1013,16 @@ select option{background:var(--surface)}
     </div>
     <div class="sb-sect">
       <div class="sb-lbl">Account</div>
+      <div class="nav-i" onclick="showCharacterLog()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Characters
+        <span class="nav-badge" style="background:var(--gold);color:var(--ink)">New</span>
+      </div>
+      <div class="nav-i" onclick="showStudioBuilder()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Studio Builder
+        <span class="nav-badge" style="background:var(--gold);color:var(--ink)">New</span>
+      </div>
       <div class="nav-i" onclick="showView('v-pricing')">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Upgrade Plan
@@ -634,70 +1164,167 @@ select option{background:var(--surface)}
 <!-- ══════════════════════════════
      PRICING
 ══════════════════════════════ -->
-<div id="v-pricing" class="view" style="background:var(--ink);align-items:center;padding:48px 24px;flex-direction:column">
-  <nav style="width:100%;max-width:900px;display:flex;align-items:center;justify-content:space-between;margin-bottom:48px">
+<div id="v-pricing" class="view" style="background:var(--ink);align-items:center;padding:48px 24px 64px;flex-direction:column;overflow-y:auto">
+  <nav style="width:100%;max-width:1100px;display:flex;align-items:center;justify-content:space-between;margin-bottom:48px">
     <div class="logo" onclick="goHome()" style="cursor:pointer">
       <div class="logo-m">V</div>
       <div class="logo-t">Vizora<span>AI</span></div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
   </nav>
-  <div style="text-align:center;margin-bottom:44px">
-    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px;letter-spacing:-1px;margin-bottom:10px">Simple, Fair Pricing</h2>
-    <p style="font-size:15px;color:var(--text-mid)">Pay with M-Pesa, Flutterwave, Paystack or card. No surprises.</p>
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:16px;max-width:640px">
+    <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,170,.07);border:1px solid rgba(0,212,170,.2);color:var(--teal);padding:5px 16px;border-radius:100px;font-size:12px;font-weight:500;margin-bottom:18px">
+      🌍 Available in Africa · MENA · Europe · Asia · Americas
+    </div>
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:42px;letter-spacing:-1.5px;margin-bottom:12px;line-height:1.1">One platform.<br>Every creator. Every market.</h2>
+    <p style="font-size:15px;color:var(--text-mid);line-height:1.6">From Lagos street vendors to London music studios, Tokyo fashion houses to Berlin nightclubs — Vizora AI gives every creator professional video power at a price that makes sense for their market.</p>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:860px;width:100%">
-    <!-- Free -->
-    <div class="card" style="padding:28px 24px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Free</div>
-      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">Try Vizora AI, no card needed.</div>
-      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$0</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:22px">Always free</div>
-      <button class="btn btn-o btn-full" onclick="goHome()">Get Started</button>
-      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
-        <div>✓ 3 videos/month (watermark)</div>
-        <div>✓ Up to 5 seconds</div>
-        <div>✓ 720p</div>
+
+  <!-- Market callouts -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:44px;max-width:900px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇿🇦 SA Fashion Designers</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇬🇧 London Music Creators</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇩🇪 Berlin Night DJs</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇯🇵 Tokyo Fashion Creators</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇦🇪 Dubai Lifestyle Brands</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇳🇬 Lagos Entrepreneurs</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇰🇪 Nairobi Content Creators</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-size:12px;color:var(--text-mid)">🇧🇷 São Paulo Agencies</div>
+  </div>
+
+  <!-- 4 Pricing tiers -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1100px;width:100%;margin-bottom:40px">
+
+    <!-- FREE -->
+    <div class="card" style="padding:26px 20px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:10px">Starter</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:6px">Free</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.5">Test the platform. No card, no commitment.</div>
+      <div style="margin-bottom:4px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:34px">$0</span><span style="font-size:12px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:20px">Forever free</div>
+      <button class="btn btn-o btn-full" style="font-size:13px;margin-bottom:22px" onclick="showAuth('signup')">Get Started</button>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-mid)">
+        <div style="font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Includes</div>
+        <div>✓ 3 videos/month</div>
+        <div>✓ 5 seconds max</div>
+        <div>✓ 720p · Watermark</div>
         <div>✓ English only</div>
-        <div style="color:var(--text-dim)">✕ Brand kit</div>
-        <div style="color:var(--text-dim)">✕ Auto-publish</div>
+        <div>✓ 10 basic templates</div>
+        <div style="color:var(--text-dim);margin-top:4px">✕ Brand kit</div>
+        <div style="color:var(--text-dim)">✕ Character Log</div>
+        <div style="color:var(--text-dim)">✕ Studio Builder</div>
       </div>
+      <div style="margin-top:18px;padding:10px;background:rgba(0,212,170,.04);border-radius:var(--rs);font-size:11px;color:var(--text-dim);text-align:center">Perfect for: First-time AI video creators</div>
     </div>
-    <!-- Creator -->
-    <div class="card" style="padding:28px 24px;border-color:var(--teal);background:linear-gradient(180deg,rgba(0,212,170,.05),var(--card));position:relative">
-      <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--ink);font-size:11px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap">⭐ Most Popular</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Creator</div>
-      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">For creators and small businesses.</div>
-      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$9</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
-      <div style="font-size:12px;margin-bottom:22px">Or <span style="color:var(--teal)">$2/week via M-Pesa · Flutterwave</span></div>
-      <button class="btn btn-p btn-full" onclick="showAuth('signup')">Start Creating →</button>
-      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
+
+    <!-- CREATOR $9 -->
+    <div class="card" style="padding:26px 20px;border-color:var(--teal);background:linear-gradient(180deg,rgba(0,212,170,.06),var(--card));position:relative">
+      <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--ink);font-size:10px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap">⭐ Most Popular</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);margin-bottom:10px">Creator</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:6px">Creator</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.5">For content creators and solo entrepreneurs.</div>
+      <div style="margin-bottom:4px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:34px">$9</span><span style="font-size:12px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:11px;margin-bottom:20px">Or <span style="color:var(--teal);font-weight:500">$2/week · M-Pesa · Flutterwave</span></div>
+      <button class="btn btn-p btn-full" style="font-size:13px;margin-bottom:22px" onclick="showAuth('signup')">Start Creating →</button>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-mid)">
+        <div style="font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Everything in Free, plus</div>
         <div>✓ 30 videos/month</div>
-        <div>✓ Up to 30 seconds</div>
-        <div>✓ 1080p Full HD</div>
-        <div>✓ All 5 languages</div>
+        <div>✓ 30 seconds max</div>
+        <div>✓ 1080p · No watermark</div>
+        <div>✓ All 6 languages</div>
+        <div>✓ 200+ templates</div>
         <div>✓ Brand kit</div>
-        <div style="color:var(--text-dim)">✕ Auto-publish</div>
+        <div style="color:var(--text-dim);margin-top:4px">✕ Character Log</div>
+        <div style="color:var(--text-dim)">✕ Studio Builder</div>
+        <div style="color:var(--text-dim)">✕ Serial continuation</div>
       </div>
+      <div style="margin-top:18px;padding:10px;background:rgba(0,212,170,.06);border-radius:var(--rs);font-size:11px;color:var(--teal);text-align:center">🎯 Lagos entrepreneurs · Nairobi creators · Dubai lifestyle</div>
     </div>
-    <!-- Business -->
-    <div class="card" style="padding:28px 24px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Business</div>
-      <div style="font-size:13px;color:var(--text-dim);margin-bottom:22px;line-height:1.5">For growing SMEs and agencies.</div>
-      <div style="margin-bottom:6px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:38px">$25</span><span style="font-size:13px;color:var(--text-dim)">/mo</span></div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:22px">Mobile money accepted</div>
-      <button class="btn btn-g btn-full" onclick="showAuth('signup')">Upgrade Now</button>
-      <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--text-mid)">
+
+    <!-- DESIGNER $29 -->
+    <div class="card" style="padding:26px 20px;border-color:var(--gold);background:linear-gradient(180deg,rgba(245,200,66,.05),var(--card));position:relative">
+      <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:10px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap">✦ For Creatives</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:10px">Designer</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:6px">Designer</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.5">For musicians, DJs, fashion creators & artists.</div>
+      <div style="margin-bottom:4px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:34px">$29</span><span style="font-size:12px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:11px;margin-bottom:20px"><span style="color:var(--gold);font-weight:500">$7/week via mobile money</span></div>
+      <button class="btn btn-g btn-full" style="font-size:13px;margin-bottom:22px" onclick="showAuth('signup')">Go Designer →</button>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-mid)">
+        <div style="font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Everything in Creator, plus</div>
+        <div>✓ 60 videos/month</div>
+        <div>✓ 60 seconds max</div>
+        <div>✓ 1080p + 4K</div>
+        <div style="color:var(--teal);font-weight:500">✓ Character Log</div>
+        <div>✓ Serial continuation</div>
+        <div>✓ Priority generation</div>
+        <div style="color:var(--text-dim);margin-top:4px">✕ Studio Builder</div>
+        <div style="color:var(--text-dim)">✕ Room / environment log</div>
+        <div style="color:var(--text-dim)">✕ Team access</div>
+      </div>
+      <div style="margin-top:18px;padding:10px;background:rgba(245,200,66,.06);border-radius:var(--rs);font-size:11px;color:var(--gold);text-align:center">🎵 London musicians · 🎧 Berlin DJs · 👗 Tokyo fashion</div>
+    </div>
+
+    <!-- BUSINESS $59 -->
+    <div class="card" style="padding:26px 20px;border-color:var(--coral);background:linear-gradient(180deg,rgba(255,107,91,.05),var(--card));position:relative">
+      <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--coral);color:white;font-size:10px;font-weight:700;padding:3px 14px;border-radius:100px;white-space:nowrap">🏢 Full Suite</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--coral);margin-bottom:10px">Business</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;margin-bottom:6px">Business</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.5">Full studio power for agencies, brands & enterprises.</div>
+      <div style="margin-bottom:4px"><span style="font-family:'Syne',sans-serif;font-weight:800;font-size:34px">$59</span><span style="font-size:12px;color:var(--text-dim)">/mo</span></div>
+      <div style="font-size:11px;margin-bottom:20px"><span style="color:var(--coral);font-weight:500">Mobile money · Bank transfer · Card</span></div>
+      <button class="btn btn-full" style="font-size:13px;margin-bottom:22px;background:linear-gradient(135deg,var(--coral),#E05040);color:white;font-weight:700;border:none;border-radius:var(--rs);padding:11px;cursor:pointer" onclick="showAuth('signup')">Go Business →</button>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text-mid)">
+        <div style="font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Everything in Designer, plus</div>
         <div>✓ 100 videos/month</div>
         <div>✓ Up to 3 minutes</div>
         <div>✓ 1080p + 4K</div>
-        <div>✓ All 5 languages</div>
-        <div>✓ Brand kit + team</div>
-        <div>✓ Auto-publish</div>
+        <div style="color:var(--teal);font-weight:500">✓ Character Log</div>
+        <div style="color:var(--teal);font-weight:500">✓ Studio Builder</div>
+        <div style="color:var(--teal);font-weight:500">✓ Room / Environment Log</div>
+        <div style="color:var(--teal);font-weight:500">✓ Serial continuation</div>
+        <div>✓ Team access (5 seats)</div>
+        <div>✓ Auto-publish to socials</div>
+        <div>✓ Priority support (4hr)</div>
+        <div>✓ Custom brand domain</div>
+      </div>
+      <div style="margin-top:18px;padding:10px;background:rgba(255,107,91,.06);border-radius:var(--rs);font-size:11px;color:var(--coral);text-align:center">🏢 Agencies · Fashion houses · Interior firms · Media studios</div>
+    </div>
+
+  </div>
+
+  <!-- Comparison note -->
+  <div style="max-width:1100px;width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:24px 28px;margin-bottom:28px">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:14px;text-align:center">Why Vizora AI beats every alternative</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;font-size:12px">
+      <div style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">💸</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:3px">Runway costs $95/mo</div>
+        <div style="color:var(--text-dim)">For the same quality. We start at $0.</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🌍</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:3px">No one serves your market</div>
+        <div style="color:var(--text-dim)">We support 6 languages and mobile money.</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🎭</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:3px">Character Log is unique</div>
+        <div style="color:var(--text-dim)">No other platform at this price keeps characters consistent.</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">🏗️</div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:3px">Studio Builder is new</div>
+        <div style="color:var(--text-dim)">Log your environment once. Shoot forever.</div>
       </div>
     </div>
   </div>
-  <div style="margin-top:32px;font-size:13px;color:var(--text-dim);text-align:center">M-Pesa · Flutterwave · Paystack · Telr · Stripe &nbsp;·&nbsp; Cancel anytime</div>
+
+  <div style="font-size:13px;color:var(--text-dim);text-align:center">
+    M-Pesa · Flutterwave · Paystack · Telr · Stripe · Bank Transfer &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; No hidden fees
+  </div>
 </div>
 
 <script>
@@ -1406,7 +2033,287 @@ async function continueSerialVideo() {
       currentUser = null;
     }
   });
+// ── Film strip + Ticker init ──────────────────────
+(function initStudio() {
+  // Film strip frames
+  const fs = document.getElementById('filmstrip');
+  if (fs) { for(let i=0;i<60;i++){ const d=document.createElement('div'); d.className='frame'; fs.appendChild(d); } }
+
+  // Market ticker
+  const markets = [
+    {icon:'🎵',label:'London',desc:'Indie Music Creators'},
+    {icon:'🎧',label:'Berlin',desc:'Night DJs & Clubs'},
+    {icon:'👗',label:'Tokyo',desc:'Fashion Enthusiasts'},
+    {icon:'⚽',label:'Johannesburg',desc:'Sport Podcasters'},
+    {icon:'🏠',label:'Dubai',desc:'Interior Designers'},
+    {icon:'📱',label:'Lagos',desc:'Digital Entrepreneurs'},
+    {icon:'🎬',label:'Paris',desc:'Art Studios & Agencies'},
+    {icon:'🌺',label:'Nairobi',desc:'Lifestyle Creators'},
+    {icon:'🎤',label:'New York',desc:'Independent Artists'},
+    {icon:'🏄',label:'São Paulo',desc:'Content Creators'},
+    {icon:'🎨',label:'Cape Town',desc:'Creative Studios'},
+    {icon:'🌙',label:'Cairo',desc:'Night Life & Events'},
+  ];
+  const track = document.getElementById('ticker-track');
+  if (track) {
+    // Duplicate for seamless scroll
+    [...markets, ...markets].forEach(m => {
+      const el = document.createElement('div');
+      el.className = 'ticker-item';
+      el.innerHTML = `<span class="ticker-icon">${m.icon}</span><span class="ticker-label">${m.label}</span><span style="color:rgba(255,255,255,.2)">·</span><span>${m.desc}</span>`;
+      track.appendChild(el);
+    });
+  }
 })();
+
+})();
+
+// ══════════════════════════════════════════════
+//  MAGNIPROJEKTA SSO
+// ══════════════════════════════════════════════
+async function doMagniLogin() {
+  // Pre-fill login form with MagniProjekta email and attempt login
+  // In production this would use OAuth or magic link
+  document.getElementById('li-email').value = 'k.thapedi@magniprojekta.com';
+  document.getElementById('li-pass').value = '';
+  toast('Enter your MagniProjekta password to continue.');
+  // Focus password field
+  setTimeout(() => document.getElementById('li-pass').focus(), 100);
+}
+
+// ══════════════════════════════════════════════
+//  CHARACTER LOG
+// ══════════════════════════════════════════════
+let savedCharacters = [];
+let charPersonality = [];
+let charType = 'human';
+
+function showCharacterLog() {
+  showView('v-characters');
+  loadCharacters();
+}
+
+async function loadCharacters() {
+  if (!currentUser) return;
+  const { data } = await db.from('characters').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  savedCharacters = data || [];
+  renderCharacters();
+}
+
+function renderCharacters() {
+  const grid = document.getElementById('characters-grid');
+  if (!savedCharacters.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--text-dim)">
+      <div style="font-size:40px;margin-bottom:14px">🎭</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No characters yet</div>
+      <div style="font-size:13px;margin-bottom:20px">Create your first character to start building consistent video series</div>
+      <button class="btn btn-p" onclick="showNewCharacterModal()">+ Create First Character</button>
+    </div>`;
+    return;
+  }
+  const icons = { podcast:'🎙️', fashion:'👗', interior:'🏠', sport:'⚽', education:'📚', marketing:'📢', corporate:'🏢', other:'🎭' };
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">${savedCharacters.map(c => `
+    <div class="card" style="padding:20px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${icons[c.primary_use] || '🎭'}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">${c.name}</div>
+          <div style="font-size:11px;color:var(--text-dim)">${c.role || c.primary_use}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:12px">${c.description.substring(0,100)}...</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        ${(c.personality || '').split(',').filter(Boolean).map(p => `<span style="background:var(--teal-soft);color:var(--teal);font-size:10px;padding:2px 8px;border-radius:100px">${p.trim()}</span>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-p btn-sm" style="flex:1;justify-content:center;font-size:12px" onclick="useCharacterInVideo('${c.id}','${c.name}')">🎬 Use in Video</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteCharacter('${c.id}')">🗑️</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function showNewCharacterModal(prefill = '') {
+  document.getElementById('modal-character').style.display = 'flex';
+  if (prefill) {
+    document.getElementById('char-desc').value = prefill;
+  }
+  charPersonality = [];
+  charType = 'human';
+}
+
+function closeCharacterModal() {
+  document.getElementById('modal-character').style.display = 'none';
+}
+
+function toggleChip(el, field) {
+  el.classList.toggle('on');
+  const val = el.textContent.trim();
+  if (field === 'char-personality') {
+    if (charPersonality.includes(val)) charPersonality = charPersonality.filter(x => x !== val);
+    else charPersonality.push(val);
+  }
+}
+
+function selCharType(type, el) {
+  charType = type;
+  document.querySelectorAll('[id^="ctype-"]').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+}
+
+async function saveCharacter() {
+  const name = document.getElementById('char-name').value.trim();
+  const desc = document.getElementById('char-desc').value.trim();
+  if (!name || !desc) { toast('Name and visual description are required.', 'err'); return; }
+  if (!currentUser) { toast('Please sign in first.', 'err'); return; }
+
+  const { error } = await db.from('characters').insert({
+    user_id: currentUser.id,
+    name,
+    role: document.getElementById('char-role').value.trim(),
+    description: desc,
+    personality: charPersonality.join(', '),
+    char_type: charType,
+    primary_use: document.getElementById('char-use').value,
+    created_at: new Date().toISOString()
+  });
+
+  if (error) { toast('Failed to save character: ' + error.message, 'err'); return; }
+  toast('✅ Character "' + name + '" saved to your log!');
+  closeCharacterModal();
+  // Clear form
+  ['char-name','char-role','char-desc'].forEach(id => document.getElementById(id).value = '');
+  loadCharacters();
+}
+
+async function deleteCharacter(id) {
+  if (!confirm('Delete this character?')) return;
+  await db.from('characters').delete().eq('id', id);
+  toast('Character deleted.');
+  loadCharacters();
+}
+
+function useCharacterInVideo(charId, charName) {
+  // Store selected character and go to create wizard
+  wizData.characterId = charId;
+  wizData.characterName = charName;
+  toast('Character "' + charName + '" selected. Now create your video!');
+  showView('v-create');
+  initWizard();
+}
+
+// ══════════════════════════════════════════════
+//  STUDIO BUILDER
+// ══════════════════════════════════════════════
+let savedStudios = [];
+
+function showStudioBuilder() {
+  showView('v-studio');
+  loadStudios();
+}
+
+async function loadStudios() {
+  if (!currentUser) return;
+  const { data } = await db.from('studios').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  savedStudios = data || [];
+  renderStudios();
+}
+
+function renderStudios() {
+  const grid = document.getElementById('studios-grid');
+  if (!savedStudios.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:48px;color:var(--text-dim)">
+      <div style="font-size:40px;margin-bottom:14px">🎬</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No studios yet</div>
+      <div style="font-size:13px;margin-bottom:20px">Build your first studio environment</div>
+      <button class="btn btn-g" onclick="showNewStudioModal()">🏗️ Build First Studio</button>
+    </div>`;
+    return;
+  }
+  const icons = { podcast:'🎙️', fashion:'👗', interior:'🛋️', outdoor:'🌍', ecommerce:'🛍️', custom:'⚙️' };
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">${savedStudios.map(s => `
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:var(--rs);background:linear-gradient(135deg,var(--gold),#DBA820);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${icons[s.studio_type]||'🎬'}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">${s.name}</div>
+          <div style="font-size:11px;color:var(--text-dim);text-transform:capitalize">${s.studio_type} Studio</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:12px">${s.description.substring(0,90)}...</div>
+      ${s.swappable ? `<div style="font-size:11px;color:var(--gold);margin-bottom:12px">🔄 Swappable: ${s.swappable.substring(0,60)}</div>` : ''}
+      <div style="display:flex;gap:6px">
+        <div style="width:16px;height:16px;border-radius:50%;background:${s.color1||'#00D4AA'};border:2px solid var(--border)"></div>
+        <div style="width:16px;height:16px;border-radius:50%;background:${s.color2||'#F5C842'};border:2px solid var(--border)"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-g btn-sm" style="flex:1;justify-content:center;font-size:12px" onclick="useStudioInVideo('${s.id}','${s.name}')">🎬 Shoot Here</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteStudio('${s.id}')">🗑️</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function showNewStudioModal(type = '') {
+  document.getElementById('modal-studio').style.display = 'flex';
+  if (type) document.getElementById('studio-type').value = type;
+}
+
+function closeStudioModal() {
+  document.getElementById('modal-studio').style.display = 'none';
+}
+
+function previewStudioPhotos(input) {
+  const preview = document.getElementById('studio-photo-preview');
+  preview.innerHTML = '';
+  Array.from(input.files).slice(0,5).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:8px;border:1.5px solid var(--border)';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveStudio() {
+  const name = document.getElementById('studio-name').value.trim();
+  const desc = document.getElementById('studio-desc').value.trim();
+  if (!name || !desc) { toast('Studio name and description are required.', 'err'); return; }
+  if (!currentUser) { toast('Please sign in first.', 'err'); return; }
+
+  const { error } = await db.from('studios').insert({
+    user_id: currentUser.id,
+    name,
+    studio_type: document.getElementById('studio-type').value,
+    description: desc,
+    swappable: document.getElementById('studio-swappable').value.trim(),
+    color1: document.getElementById('studio-color1').value,
+    color2: document.getElementById('studio-color2').value,
+    created_at: new Date().toISOString()
+  });
+
+  if (error) { toast('Failed to save studio: ' + error.message, 'err'); return; }
+  toast('✅ Studio "' + name + '" saved!');
+  closeStudioModal();
+  ['studio-name','studio-desc','studio-swappable'].forEach(id => document.getElementById(id).value = '');
+  loadStudios();
+}
+
+async function deleteStudio(id) {
+  if (!confirm('Delete this studio?')) return;
+  await db.from('studios').delete().eq('id', id);
+  toast('Studio deleted.');
+  loadStudios();
+}
+
+function useStudioInVideo(studioId, studioName) {
+  wizData.studioId = studioId;
+  wizData.studioName = studioName;
+  toast('Studio "' + studioName + '" selected. Now create your video!');
+  showView('v-create');
+  initWizard();
+}
 </script>
 </body>
 </html>
