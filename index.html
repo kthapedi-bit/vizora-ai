@@ -100,21 +100,58 @@ select option{background:var(--surface)}
 ══════════════════ */
 #v-land{background:#04060F;overflow:hidden;position:relative;min-height:100vh}
 
-/* Studio floor — perspective grid */
-.studio-floor{position:absolute;bottom:0;left:0;right:0;height:55%;pointer-events:none;overflow:hidden}
+/* 3D Production Studio Background */
+.studio-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+
+/* Back wall */
+.studio-wall{position:absolute;left:0;right:0;top:0;height:60%;
+  background:linear-gradient(180deg,#06080F 0%,#0A0F1E 60%,#0D1428 100%);
+}
+/* Ceiling truss grid */
+.studio-ceiling{position:absolute;top:0;left:0;right:0;height:22%;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0px,rgba(255,255,255,.04) 1px,transparent 1px,transparent 80px),
+             repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0px,rgba(255,255,255,.03) 1px,transparent 1px,transparent 40px);
+}
+/* LED panel strips on ceiling */
+.led-strip{position:absolute;top:0;height:4px;border-radius:0 0 2px 2px;filter:blur(1px)}
+.ls1{left:10%;width:15%;background:linear-gradient(90deg,transparent,rgba(0,212,170,.8),transparent);box-shadow:0 0 20px 4px rgba(0,212,170,.4)}
+.ls2{left:35%;width:18%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);box-shadow:0 0 24px 6px rgba(255,255,255,.3)}
+.ls3{left:60%;width:20%;background:linear-gradient(90deg,transparent,rgba(245,200,66,.8),transparent);box-shadow:0 0 20px 4px rgba(245,200,66,.4)}
+.ls4{right:8%;width:12%;background:linear-gradient(90deg,transparent,rgba(255,107,91,.7),transparent);box-shadow:0 0 18px 4px rgba(255,107,91,.3)}
+
+/* Studio floor — polished dark reflective */
+.studio-floor{position:absolute;bottom:0;left:0;right:0;height:42%;overflow:hidden}
 .studio-floor::before{content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(90deg,rgba(0,212,170,.06) 1px,transparent 1px),
-    linear-gradient(0deg,rgba(0,212,170,.04) 1px,transparent 1px);
-  background-size:60px 60px;
-  transform:perspective(600px) rotateX(60deg) scale(1.8) translateY(10%);
-  transform-origin:50% 100%;
-  animation:gridScroll 8s linear infinite;
+  background:linear-gradient(180deg,#0D1428 0%,#080C18 40%,#050810 100%);
 }
+/* Perspective grid on floor */
 .studio-floor::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(to top,#04060F 0%,transparent 60%,#04060F 100%);
+  background:
+    linear-gradient(90deg,rgba(0,212,170,.07) 1px,transparent 1px),
+    linear-gradient(rgba(0,212,170,.04) 1px,transparent 1px);
+  background-size:100px 80px;
+  transform:perspective(400px) rotateX(55deg) scaleX(1.6) translateY(5%);
+  transform-origin:50% 0%;
+  animation:gridPulse 6s ease-in-out infinite alternate;
 }
-@keyframes gridScroll{from{background-position:0 0}to{background-position:0 60px}}
+@keyframes gridPulse{from{opacity:.7}to{opacity:1}}
+
+/* Floor reflection glow */
+.floor-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:70%;height:120px;
+  background:radial-gradient(ellipse at bottom,rgba(0,212,170,.08) 0%,transparent 70%);
+  filter:blur(20px);
+}
+
+/* Hanging studio lights / Fresnels from ceiling */
+.fresnel{position:absolute;top:0;display:flex;flex-direction:column;align-items:center}
+.fresnel-cable{width:2px;background:linear-gradient(180deg,#1A2840,#253550);border-radius:1px}
+.fresnel-head{border-radius:4px 4px 8px 8px;display:flex;align-items:center;justify-content:center;position:relative}
+.fresnel-head::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+  width:60%;height:8px;border-radius:50%;filter:blur(4px)}
+
+/* Spotlight cone from each Fresnel */
+.spot-cone{position:absolute;transform-origin:top center;pointer-events:none}
 
 /* Spotlight beams — cinema magic */
 .beam{position:absolute;top:0;pointer-events:none;transform-origin:top center}
@@ -709,30 +746,106 @@ select option{background:var(--surface)}
 ══════════════════════════════ -->
 <div id="v-land" class="view show">
 
-  <!-- Studio floor grid -->
-  <div class="studio-floor"></div>
-
-  <!-- Spotlight beams -->
-  <div class="beam beam-1"></div>
-  <div class="beam beam-2"></div>
-  <div class="beam beam-3"></div>
-
-  <!-- Spot source glows -->
-  <div class="spot-source ss1"></div>
-  <div class="spot-source ss2"></div>
-  <div class="spot-source ss3"></div>
-
-  <!-- Lens flares at spotlight sources -->
-  <div class="flare fl1"></div>
-  <div class="flare fl2"></div>
-  <div class="flare fl3"></div>
-
-  <!-- Fog -->
-  <div class="fog">
-    <div class="fog-p fp1"></div>
-    <div class="fog-p fp2"></div>
-    <div class="fog-p fp3"></div>
+  <!-- 3D Studio Scene -->
+  <div class="studio-scene">
+    <!-- Ceiling structure -->
+    <div class="studio-ceiling"></div>
+    <!-- LED strips -->
+    <div class="led-strip ls1"></div>
+    <div class="led-strip ls2"></div>
+    <div class="led-strip ls3"></div>
+    <div class="led-strip ls4"></div>
+    <!-- Back wall -->
+    <div class="studio-wall"></div>
+    <!-- Floor -->
+    <div class="studio-floor"></div>
+    <div class="floor-glow"></div>
   </div>
+
+  <!-- Hanging Fresnel lights (SVG) -->
+  <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="coneT" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="#00D4AA" stop-opacity=".22"/><stop offset="100%" stop-color="#00D4AA" stop-opacity="0"/></radialGradient>
+      <radialGradient id="coneW" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="#FFFFFF" stop-opacity=".18"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+      <radialGradient id="coneG" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="#F5C842" stop-opacity=".2"/><stop offset="100%" stop-color="#F5C842" stop-opacity="0"/></radialGradient>
+      <radialGradient id="coneR" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="#FF6B5B" stop-opacity=".16"/><stop offset="100%" stop-color="#FF6B5B" stop-opacity="0"/></radialGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+
+    <!-- Truss bars across ceiling -->
+    <rect x="0" y="0" width="1200" height="3" fill="rgba(255,255,255,.06)"/>
+    <rect x="0" y="60" width="1200" height="2" fill="rgba(255,255,255,.04)"/>
+    <rect x="0" y="110" width="1200" height="1.5" fill="rgba(255,255,255,.03)"/>
+    <!-- Vertical truss members -->
+    <line x1="120" y1="0" x2="120" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+    <line x1="300" y1="0" x2="300" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+    <line x1="520" y1="0" x2="520" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+    <line x1="700" y1="0" x2="700" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+    <line x1="900" y1="0" x2="900" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+    <line x1="1080" y1="0" x2="1080" y2="115" stroke="rgba(255,255,255,.05)" stroke-width="1.5"/>
+
+    <!-- Fresnel 1 — teal, left -->
+    <line x1="180" y1="0" x2="180" y2="80" stroke="#1E3050" stroke-width="2"/>
+    <rect x="162" y="78" width="36" height="22" rx="4" fill="#0D1830" stroke="#2A3D60" stroke-width="1.5"/>
+    <ellipse cx="180" cy="90" rx="14" ry="8" fill="#00D4AA" opacity=".7" filter="url(#glow)"/>
+    <polygon points="130,90 230,90 280,420 80,420" fill="url(#coneT)" opacity=".9">
+      <animateTransform attributeName="transform" type="rotate" values="-3,180,90;3,180,90;-3,180,90" dur="8s" repeatCount="indefinite"/>
+    </polygon>
+    <circle cx="180" cy="88" r="5" fill="#00D4AA" opacity=".9" filter="url(#glow)">
+      <animate attributeName="opacity" values=".9;.6;.9" dur="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Fresnel 2 — white key light, center-left -->
+    <line x1="440" y1="0" x2="440" y2="95" stroke="#1E3050" stroke-width="2.5"/>
+    <rect x="418" y="93" width="44" height="26" rx="5" fill="#0D1830" stroke="#2A3D60" stroke-width="2"/>
+    <ellipse cx="440" cy="107" rx="18" ry="10" fill="white" opacity=".6" filter="url(#glow)"/>
+    <polygon points="360,107 520,107 600,480 260,480" fill="url(#coneW)" opacity="1">
+      <animateTransform attributeName="transform" type="rotate" values="-2,440,107;2,440,107;-2,440,107" dur="10s" repeatCount="indefinite"/>
+    </polygon>
+    <circle cx="440" cy="105" r="7" fill="white" opacity=".8" filter="url(#glow)">
+      <animate attributeName="opacity" values=".8;.5;.8" dur="4s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Fresnel 3 — gold, center-right -->
+    <line x1="680" y1="0" x2="680" y2="85" stroke="#1E3050" stroke-width="2"/>
+    <rect x="660" y="83" width="40" height="24" rx="4" fill="#0D1830" stroke="#2A3D60" stroke-width="1.5"/>
+    <ellipse cx="680" cy="96" rx="16" ry="9" fill="#F5C842" opacity=".65" filter="url(#glow)"/>
+    <polygon points="610,96 750,96 820,440 540,440" fill="url(#coneG)" opacity=".9">
+      <animateTransform attributeName="transform" type="rotate" values="2,680,96;-3,680,96;2,680,96" dur="9s" repeatCount="indefinite"/>
+    </polygon>
+    <circle cx="680" cy="94" r="6" fill="#F5C842" opacity=".85" filter="url(#glow)">
+      <animate attributeName="opacity" values=".85;.55;.85" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Fresnel 4 — coral fill, right -->
+    <line x1="950" y1="0" x2="950" y2="75" stroke="#1E3050" stroke-width="2"/>
+    <rect x="933" y="73" width="34" height="20" rx="4" fill="#0D1830" stroke="#2A3D60" stroke-width="1.5"/>
+    <ellipse cx="950" cy="84" rx="13" ry="7" fill="#FF6B5B" opacity=".6" filter="url(#glow)"/>
+    <polygon points="890,84 1010,84 1060,380 840,380" fill="url(#coneR)" opacity=".85">
+      <animateTransform attributeName="transform" type="rotate" values="4,950,84;-2,950,84;4,950,84" dur="11s" repeatCount="indefinite"/>
+    </polygon>
+    <circle cx="950" cy="82" r="5" fill="#FF6B5B" opacity=".8" filter="url(#glow)">
+      <animate attributeName="opacity" values=".8;.4;.8" dur="5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Floor light pools -->
+    <ellipse cx="180" cy="420" rx="80" ry="25" fill="#00D4AA" opacity=".06" filter="url(#glow)"/>
+    <ellipse cx="440" cy="480" rx="110" ry="35" fill="white" opacity=".05" filter="url(#glow)"/>
+    <ellipse cx="680" cy="460" rx="100" ry="30" fill="#F5C842" opacity=".06" filter="url(#glow)"/>
+    <ellipse cx="950" cy="400" rx="80" ry="24" fill="#FF6B5B" opacity=".05" filter="url(#glow)"/>
+
+    <!-- Camera monitors on back wall (subtle) -->
+    <rect x="50" y="160" width="90" height="55" rx="4" fill="#0A1020" stroke="#1A2840" stroke-width="1.5" opacity=".7"/>
+    <rect x="54" y="164" width="82" height="43" rx="2" fill="#060E1E" opacity=".9"/>
+    <rect x="56" y="166" width="78" height="39" rx="1" fill="#00D4AA" opacity=".04"/>
+    <text x="95" y="192" text-anchor="middle" fill="rgba(0,212,170,.5)" font-size="8" font-family="monospace">LIVE</text>
+    <circle cx="62" cy="211" r="2" fill="#FF6B5B" opacity=".8"><animate attributeName="opacity" values=".8;.2;.8" dur="1.5s" repeatCount="indefinite"/></circle>
+
+    <rect x="1060" y="150" width="100" height="60" rx="4" fill="#0A1020" stroke="#1A2840" stroke-width="1.5" opacity=".7"/>
+    <rect x="1064" y="154" width="92" height="48" rx="2" fill="#060E1E" opacity=".9"/>
+    <rect x="1066" y="156" width="88" height="44" rx="1" fill="#F5C842" opacity=".03"/>
+    <text x="1110" y="183" text-anchor="middle" fill="rgba(245,200,66,.5)" font-size="8" font-family="monospace">CAM 2</text>
+  </svg>
 
   <!-- Camera Rig — Left -->
   <div class="cam-rig cam-left">
@@ -1404,19 +1517,24 @@ function getGreeting() {
 // ══════════════════════════════════════════════
 function showAuth(mode) {
   showView('v-auth');
-  document.getElementById('auth-err').style.display = 'none';
-  document.getElementById('form-signup').style.display = 'none';
-  document.getElementById('form-login').style.display = 'none';
-  document.getElementById('form-forgot').style.display = 'none';
+  // Safe helper — never crash on missing element
+  function hide(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
+  function show(id, disp) { var el = document.getElementById(id); if (el) el.style.display = disp || 'block'; }
+  function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+
+  hide('auth-err');
+  hide('form-signup');
+  hide('form-login');
+  hide('form-forgot');
 
   if (mode === 'login') {
-    document.getElementById('auth-title').textContent = 'Welcome back';
-    document.getElementById('auth-sub').textContent = 'Sign in to your Vizora AI account.';
-    document.getElementById('form-login').style.display = 'block';
-  } else if (mode === 'signup') {
-    document.getElementById('auth-title').textContent = 'Create your account';
-    document.getElementById('auth-sub').textContent = 'Start creating AI videos for free today.';
-    document.getElementById('form-signup').style.display = 'block';
+    setText('auth-title', 'Welcome back');
+    setText('auth-sub', 'Sign in to your Vizora AI account.');
+    show('form-login');
+  } else {
+    setText('auth-title', 'Create your account');
+    setText('auth-sub', 'Start creating AI videos for free today.');
+    show('form-signup');
   }
 }
 
@@ -1766,7 +1884,8 @@ function getStepHTML(step) {
            ['fr','🇫🇷','French','West Africa'],
            ['sw','🇰🇪','Swahili','East Africa'],
            ['zu','🇿🇦','Zulu','South Africa'],
-           ['id','🇮🇩','Bahasa','Southeast Asia']
+           ['id','🇮🇩','Bahasa','Southeast Asia'],
+           ['zh','🇨🇳','Mandarin','China & Global']
           ].map(([code,flag,name,sub]) => `
           <div class="lang-i ${wizData.language===code?'on':''}" onclick="selLang('${code}',this)">
             <div class="lflag">${flag}</div>
