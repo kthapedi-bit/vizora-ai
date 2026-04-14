@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vizora AI — Create Videos in 60 Seconds</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 /* ── CONFIG: paste your keys below ── */
@@ -1072,7 +1072,7 @@ select option{background:var(--surface)}
           <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--teal),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--ink);flex-shrink:0">M</div>
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--text)">Continue as MagniProjekta</div>
-            <div style="font-size:11px;color:var(--text-dim)">k.thapedi@magniprojekta.com · Business Account</div>
+            <div style="font-size:11px;color:var(--text-dim)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="63084d170b021306070a230e02040d0a13110c09060817024d000c0e">[email&#160;protected]</a> · Business Account</div>
           </div>
           <div style="margin-left:auto;color:var(--teal);font-size:18px">→</div>
         </div>
@@ -1457,7 +1457,7 @@ select option{background:var(--surface)}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══════════════════════════════════════════════
 //  CONFIG — REPLACE THESE WITH YOUR REAL KEYS
 // ══════════════════════════════════════════════
@@ -1597,7 +1597,7 @@ async function doLogin() {
   setLoading('li-btn', true, 'Signing in...');
   const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
   setLoading('li-btn', false, 'Sign In →');
-  if (error) return showAuthErr('Invalid email or password. Use "Forgot password?" if needed.');
+  if (error) { console.error("Auth:", error.message); return showAuthErr("Sign in failed: " + error.message + ". Try signing up first if you have no account."); }
   currentUser = data.user;
   toast('Welcome back! 👋');
   loadDashboard();
@@ -2537,13 +2537,4 @@ async function deleteStudio(id) {
   loadStudios();
 }
 
-function useStudioInVideo(studioId, studioName) {
-  wizData.studioId = studioId;
-  wizData.studioName = studioName;
-  toast('Studio "' + studioName + '" selected. Now create your video!');
-  showView('v-create');
-  initWizard();
-}
-</script>
-</body>
-</html>
+function useStudioI
