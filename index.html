@@ -1580,13 +1580,35 @@ async function doSignup() {
     email, password: pass,
     options: { data: { full_name: name, account_type: accountType, company_name: company } }
   });
-  setLoading('su-btn', false, 'Create Account →');
-  if (error) return showAuthErr(error.message);
-  if (data.user) {
+  setLoading('su-btn', false, 'Create Account');
+  if (error) return showAuthErr('Sign up failed: ' + error.message);
+
+  if (data.session) {
+    // Signed in immediately - no email confirmation
     currentUser = data.user;
     await initUserProfile(data.user, name, company, industry, size);
-    toast(accountType === 'business' ? '🏢 Business account created! Welcome to Vizora AI.' : '🎉 Account created! Welcome to Vizora AI.');
+    toast('Welcome to Vizora AI!');
     loadDashboard();
+  } else if (data.user) {
+    // Email confirmation required
+    document.getElementById('form-signup').style.display = 'none';
+    const t = document.getElementById('auth-title');
+    const s = document.getElementById('auth-sub');
+    if (t) t.textContent = 'Check your email';
+    if (s) s.textContent = 'We sent a confirmation link to ' + email;
+    const box = document.querySelector('.auth-box');
+    const msg = document.createElement('div');
+    msg.style.cssText = 'text-align:center;padding:16px 0';
+    msg.innerHTML = '<div style="font-size:44px;margin-bottom:12px">EMAIL</div>'
+      + '<div style="font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:20px">'
+      + 'Confirmation sent to <strong style="color:var(--teal)">' + email + '</strong><br><br>'
+      + 'Click the link in your email then come back to sign in.<br>'
+      + '<span style="font-size:12px;color:var(--text-dim)">Check spam if you do not see it.</span>'
+      + '</div>'
+      + '<button class="btn btn-p btn-full" onclick="showAuth(\"login\")">Go to Sign In</button>';
+    box.appendChild(msg);
+  } else {
+    showAuthErr('Unexpected response. Please try again.');
   }
 }
 
@@ -1596,10 +1618,17 @@ async function doLogin() {
   if (!email || !pass) return showAuthErr('Please enter your email and password.');
   setLoading('li-btn', true, 'Signing in...');
   const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
-  setLoading('li-btn', false, 'Sign In →');
-  if (error) { console.error("Auth:", error.message); return showAuthErr("Sign in failed: " + error.message + ". Try signing up first if you have no account."); }
+  setLoading('li-btn', false, 'Sign In');
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (m.includes('confirm') || m.includes('verif')) {
+      return showAuthErr('Please confirm your email first — check your inbox for a link from Vizora AI.');
+    }
+    return showAuthErr('Sign in failed: ' + error.message + ' — Try signing up if you have no account.');
+  }
+  if (!data || !data.user) return showAuthErr('No session. Please try again.');
   currentUser = data.user;
-  toast('Welcome back! 👋');
+  toast('Welcome back!');
   loadDashboard();
 }
 
