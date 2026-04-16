@@ -1484,9 +1484,13 @@ let wizData = { topic: '', audience: '', format: 'landscape', style: 'cinematic'
 //  UTILS
 // ══════════════════════════════════════════════
 function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
-  document.getElementById(id).classList.add('show');
-  window.scrollTo(0, 0);
+  try {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('show'));
+    var el = document.getElementById(id);
+    if (!el) { console.error('showView: element not found:', id); return; }
+    el.classList.add('show');
+    window.scrollTo(0, 0);
+  } catch(e) { console.error('showView error:', e); }
 }
 
 function toast(msg, type = 'ok') {
@@ -1685,12 +1689,14 @@ async function loadDashboard() {
   showView('v-dash');
   if (!currentUser) return;
 
-  // Set greeting
-  document.getElementById('dash-greeting').textContent = getGreeting();
+  // Set greeting safely
+  var greetEl = document.getElementById('dash-greeting');
+  if (greetEl) greetEl.textContent = getGreeting();
 
-  // Load profile
-  const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-  if (profile) {
+  // Load profile — wrapped so dashboard always shows even if DB fails
+  try {
+    const { data: profile } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (profile) {
     const name = profile.full_name || currentUser.email.split('@')[0];
     const initial = name.charAt(0).toUpperCase();
     document.getElementById('sb-avatar').textContent = initial;
@@ -1708,10 +1714,26 @@ async function loadDashboard() {
     document.getElementById('wiz-credits').textContent = `${left} credits`;
   }
 
-  // Load videos
-  const { data: videos } = await db.from('videos').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(6);
-  userVideos = videos || [];
-  renderVideoPreviews(userVideos.slice(0, 3));
+  } catch(dbErr) {
+    console.warn('Profile load error (non-fatal):', dbErr);
+    // Still show dashboard with defaults
+    var nameFromEmail = currentUser.email ? currentUser.email.split('@')[0] : 'User';
+    var avatarEl = document.getElementById('sb-avatar');
+    var nameEl2 = document.getElementById('sb-name');
+    if (avatarEl) avatarEl.textContent = nameFromEmail.charAt(0).toUpperCase();
+    if (nameEl2) nameEl2.textContent = nameFromEmail;
+  }
+
+  // Load videos — also wrapped
+  try {
+    const { data: videos } = await db.from('videos').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(6);
+    userVideos = videos || [];
+    renderVideoPreviews(userVideos.slice(0, 3));
+  } catch(vErr) {
+    console.warn('Videos load error (non-fatal):', vErr);
+    userVideos = [];
+    renderVideoPreviews([]);
+  }
 }
 
 function renderVideoPreviews(videos) {
