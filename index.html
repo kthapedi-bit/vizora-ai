@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vizora AI — Create Videos in 60 Seconds</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<!-- Supabase via direct REST API - no SDK needed for auth -->
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 /* ── CONFIG: paste your keys below ── */
@@ -1459,17 +1459,173 @@ select option{background:var(--surface)}
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══════════════════════════════════════════════
-//  CONFIG — REPLACE THESE WITH YOUR REAL KEYS
+//  CONFIG
 // ══════════════════════════════════════════════
 const SUPABASE_URL = 'https://ezbbjxtdrhrqietqwxer.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
-
+const SUPABASE_KEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
 
 // ══════════════════════════════════════════════
-//  SUPABASE CLIENT
+//  DIRECT REST API — bypasses SDK version issues
 // ══════════════════════════════════════════════
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let _session = null;
+
+function sbHeaders(withAuth) {
+  var h = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY
+  };
+  if (withAuth && _session && _session.access_token) {
+    h['Authorization'] = 'Bearer ' + _session.access_token;
+  }
+  return h;
+}
+
+// Auth helpers
+var db = {
+  auth: {
+    signUp: async function(opts) {
+      try {
+        var r = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+          method: 'POST',
+          headers: sbHeaders(false),
+          body: JSON.stringify({ email: opts.email, password: opts.password,
+            data: opts.options && opts.options.data ? opts.options.data : {} })
+        });
+        var d = await r.json();
+        if (d.error || d.msg) return { data: null, error: { message: d.error_description || d.msg || d.error || 'Signup failed' } };
+        if (d.access_token) { _session = d; localStorage.setItem('vz_session', JSON.stringify(d)); }
+        return { data: { user: d.user || d, session: d.access_token ? d : null }, error: null };
+      } catch(e) { return { data: null, error: { message: e.message } }; }
+    },
+    signInWithPassword: async function(opts) {
+      try {
+        var r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: sbHeaders(false),
+          body: JSON.stringify({ email: opts.email, password: opts.password })
+        });
+        var d = await r.json();
+        if (d.error || d.error_code) return { data: null, error: { message: d.error_description || d.msg || d.error || 'Login failed' } };
+        _session = d;
+        localStorage.setItem('vz_session', JSON.stringify(d));
+        return { data: { user: d.user, session: d }, error: null };
+      } catch(e) { return { data: null, error: { message: e.message } }; }
+    },
+    signOut: async function() {
+      try {
+        await fetch(SUPABASE_URL + '/auth/v1/logout', {
+          method: 'POST', headers: sbHeaders(true)
+        });
+      } catch(e) {}
+      _session = null;
+      localStorage.removeItem('vz_session');
+    },
+    getSession: async function() {
+      var saved = localStorage.getItem('vz_session');
+      if (saved) { try { _session = JSON.parse(saved); return { data: { session: _session } }; } catch(e) {} }
+      return { data: { session: null } };
+    },
+    onAuthStateChange: function(cb) { /* handled via getSession */ },
+    resetPasswordForEmail: async function(email, opts) {
+      try {
+        var r = await fetch(SUPABASE_URL + '/auth/v1/recover', {
+          method: 'POST', headers: sbHeaders(false),
+          body: JSON.stringify({ email: email })
+        });
+        var d = await r.json();
+        if (d.error) return { error: { message: d.error_description || d.error } };
+        return { error: null };
+      } catch(e) { return { error: { message: e.message } }; }
+    },
+    updateUser: async function(opts) {
+      try {
+        var r = await fetch(SUPABASE_URL + '/auth/v1/user', {
+          method: 'PUT', headers: sbHeaders(true),
+          body: JSON.stringify(opts)
+        });
+        var d = await r.json();
+        if (d.error) return { error: { message: d.error } };
+        return { data: d, error: null };
+      } catch(e) { return { error: { message: e.message } }; }
+    }
+  },
+  // Database helpers using REST API
+  from: function(table) {
+    return {
+      select: function(cols) {
+        var q = { table, cols: cols || '*', filters: [], order: null, lim: null };
+        return {
+          eq: function(col, val) { q.filters.push(col + '=eq.' + encodeURIComponent(val)); return this; },
+          order: function(col, opts) { q.order = col + (opts && opts.ascending === false ? '.desc' : '.asc'); return this; },
+          limit: function(n) { q.lim = n; return this; },
+          single: function() { q.single = true; return this._run(); },
+          then: function(resolve, reject) { return this._run().then(resolve, reject); },
+          _run: async function() {
+            try {
+              var url = SUPABASE_URL + '/rest/v1/' + q.table + '?select=' + (q.cols === '*' ? '*' : q.cols);
+              q.filters.forEach(function(f) { url += '&' + f; });
+              if (q.order) url += '&order=' + q.order;
+              if (q.lim) url += '&limit=' + q.lim;
+              var headers = sbHeaders(true);
+              if (q.single) headers['Accept'] = 'application/vnd.pgrst.object+json';
+              var r = await fetch(url, { headers: headers });
+              if (!r.ok) { var e = await r.json(); return { data: null, error: e }; }
+              var data = await r.json();
+              return { data: data, error: null };
+            } catch(e) { return { data: null, error: { message: e.message } }; }
+          }
+        };
+      },
+      insert: async function(row) {
+        try {
+          var r = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+            method: 'POST',
+            headers: Object.assign({}, sbHeaders(true), { 'Prefer': 'return=minimal' }),
+            body: JSON.stringify(row)
+          });
+          if (!r.ok) { var e = await r.json(); return { error: e }; }
+          return { error: null };
+        } catch(e) { return { error: { message: e.message } }; }
+      },
+      upsert: async function(row) {
+        try {
+          var r = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+            method: 'POST',
+            headers: Object.assign({}, sbHeaders(true), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+            body: JSON.stringify(row)
+          });
+          if (!r.ok) { try { var e = await r.json(); return { error: e }; } catch(x) { return { error: null }; } }
+          return { error: null };
+        } catch(e) { return { error: { message: e.message } }; }
+      },
+      delete: function() {
+        var q = { table, filters: [] };
+        return {
+          eq: function(col, val) { q.filters.push(col + '=eq.' + encodeURIComponent(val)); return this; },
+          then: async function(resolve) {
+            try {
+              var url = SUPABASE_URL + '/rest/v1/' + q.table + '?';
+              q.filters.forEach(function(f) { url += f + '&'; });
+              var r = await fetch(url, { method: 'DELETE', headers: sbHeaders(true) });
+              resolve({ error: r.ok ? null : { message: 'Delete failed' } });
+            } catch(e) { resolve({ error: { message: e.message } }); }
+          }
+        };
+      },
+      rpc: async function() { return { error: null }; }
+    };
+  },
+  rpc: async function(fn, params) {
+    try {
+      var r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        headers: sbHeaders(true),
+        body: JSON.stringify(params || {})
+      });
+      return { error: r.ok ? null : { message: 'RPC failed' } };
+    } catch(e) { return { error: { message: e.message } }; }
+  }
+};
 
 // ══════════════════════════════════════════════
 //  STATE
@@ -2243,30 +2399,21 @@ async function continueSerialVideo() {
 // ══════════════════════════════════════════════
 (async () => {
   // Skip if keys not configured
-  if (SUPABASE_URL.includes('YOUR_')) return;
-
-  // Handle password reset redirect from email link
-  const hashParams = new URLSearchParams(window.location.hash.replace('#',''));
-  const queryParams = new URLSearchParams(window.location.search);
+  // Handle password reset redirect
+  var hashParams = new URLSearchParams(window.location.hash.replace('#',''));
+  var queryParams = new URLSearchParams(window.location.search);
   if (hashParams.get('type') === 'recovery' || queryParams.get('reset') === 'true') {
     showPasswordResetForm();
     return;
   }
 
-  const { data: { session } } = await db.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
+  // Check for saved session
+  var sessionResult = await db.auth.getSession();
+  if (sessionResult.data && sessionResult.data.session && sessionResult.data.session.user) {
+    _session = sessionResult.data.session;
+    currentUser = _session.user;
     loadDashboard();
   }
-
-  // Listen for auth changes
-  db.auth.onAuthStateChange((_event, session) => {
-    if (session?.user) {
-      currentUser = session.user;
-    } else {
-      currentUser = null;
-    }
-  });
 })();
 
 // Film strip + Ticker — robust init
