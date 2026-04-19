@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizora AI — Auth Test</title>
+<style>
+body { font-family: monospace; background: #080C18; color: #E4EAF8; padding: 24px; max-width: 500px; margin: 0 auto; }
+h2 { color: #00D4AA; margin-bottom: 20px; }
+input { width: 100%; padding: 10px; margin-bottom: 10px; background: #131D36; border: 1px solid #2E4060; color: white; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+button { width: 100%; padding: 12px; background: #00D4AA; color: #080C18; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 8px; font-size: 14px; }
+button:hover { background: #00B899; }
+.btn2 { background: #F5C842; }
+.btn2:hover { background: #DBA820; }
+#log { background: #0D1426; border: 1px solid #1E3050; border-radius: 8px; padding: 16px; margin-top: 20px; min-height: 100px; font-size: 12px; line-height: 1.8; white-space: pre-wrap; word-break: break-all; }
+.ok { color: #22C55E; }
+.err { color: #FF6B5B; }
+.info { color: #00D4AA; }
+.warn { color: #F5C842; }
+</style>
+</head>
+<body>
+
+<h2>🔬 Vizora AI — Auth Diagnostic</h2>
+<p style="color:#7A8DB0;font-size:13px;margin-bottom:20px">This page tests your Supabase connection directly. Share the log with Claude.</p>
+
+<input type="email" id="email" placeholder="Email address" value="test@vizora.ai">
+<input type="password" id="pass" placeholder="Password (min 6 chars)" value="vizora123">
+
+<button onclick="testSignup()">🧪 Test Sign Up</button>
+<button class="btn2" onclick="testLogin()">🔑 Test Login</button>
+<button onclick="testHealth()" style="background:#2E4060;color:#E4EAF8">📡 Test Connection</button>
+<button onclick="clearLog()" style="background:#1A2840;color:#7A8DB0">🗑 Clear Log</button>
+
+<div id="log">Waiting for test...\n</div>
+
+<script>
+const URL = 'https://ezbbjxtdrhrqietqwxer.supabase.co';
+const KEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
+
+function log(msg, type) {
+  var el = document.getElementById('log');
+  var cls = type || 'info';
+  var time = new Date().toLocaleTimeString();
+  el.innerHTML += '<span class="' + cls + '">[' + time + '] ' + msg + '</span>\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+  log('Log cleared', 'info');
+}
+
+async function testHealth() {
+  log('Testing Supabase connection...', 'info');
+  try {
+    var r = await fetch(URL + '/auth/v1/health', {
+      headers: { 'apikey': KEY }
+    });
+    var text = await r.text();
+    log('Status: ' + r.status, r.ok ? 'ok' : 'err');
+    log('Response: ' + text, r.ok ? 'ok' : 'err');
+    if (r.ok) {
+      log('✓ Supabase connection WORKS', 'ok');
+    } else {
+      log('✗ Supabase connection FAILED', 'err');
+    }
+  } catch(e) {
+    log('✗ Network error: ' + e.message, 'err');
+    log('This means fetch() is being blocked', 'warn');
+  }
+}
+
+async function testSignup() {
+  var email = document.getElementById('email').value;
+  var pass = document.getElementById('pass').value;
+  log('--- SIGNUP TEST ---', 'info');
+  log('Email: ' + email, 'info');
+  log('Calling: POST /auth/v1/signup', 'info');
+  
+  try {
+    var r = await fetch(URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': KEY
+      },
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    log('HTTP Status: ' + r.status + ' ' + r.statusText, r.ok ? 'ok' : 'warn');
+    var data = await r.json();
+    log('Response: ' + JSON.stringify(data, null, 2), 'info');
+    
+    if (data.access_token) {
+      log('✓ SIGNUP SUCCESS — got access_token!', 'ok');
+      log('User ID: ' + (data.user && data.user.id), 'ok');
+    } else if (data.id && !data.access_token) {
+      log('✓ User created but EMAIL CONFIRMATION required', 'warn');
+      log('Go to Supabase → Auth → Settings → disable email confirmation', 'warn');
+    } else if (data.error) {
+      log('✗ Error: ' + data.error, 'err');
+      log('Message: ' + (data.error_description || data.msg || ''), 'err');
+    } else {
+      log('Unexpected response — see above', 'warn');
+    }
+  } catch(e) {
+    log('✗ EXCEPTION: ' + e.message, 'err');
+    log('Stack: ' + e.stack, 'err');
+  }
+}
+
+async function testLogin() {
+  var email = document.getElementById('email').value;
+  var pass = document.getElementById('pass').value;
+  log('--- LOGIN TEST ---', 'info');
+  log('Email: ' + email, 'info');
+  log('Calling: POST /auth/v1/token?grant_type=password', 'info');
+  
+  try {
+    var r = await fetch(URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': KEY
+      },
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    log('HTTP Status: ' + r.status + ' ' + r.statusText, r.ok ? 'ok' : 'warn');
+    var data = await r.json();
+    log('Response: ' + JSON.stringify(data, null, 2), 'info');
+    
+    if (data.access_token) {
+      log('✓ LOGIN SUCCESS — got access_token!', 'ok');
+      log('User: ' + (data.user && data.user.email), 'ok');
+      log('Token: ' + data.access_token.substring(0, 40) + '...', 'ok');
+    } else if (data.error) {
+      log('✗ Login error: ' + data.error, 'err');
+      log('Message: ' + (data.error_description || data.msg || ''), 'err');
+      if (data.error_description && data.error_description.includes('confirm')) {
+        log('→ FIX: Disable email confirmation in Supabase dashboard', 'warn');
+      }
+    }
+  } catch(e) {
+    log('✗ EXCEPTION: ' + e.message, 'err');
+  }
+}
+
+// Auto-run connection test on load
+window.onload = function() {
+  log('Page loaded. Running connection test...', 'info');
+  testHealth();
+};
+</script>
+</body>
+</html>
