@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizora AI — Sign In</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#080C18;color:#E4EAF8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{width:100%;max-width:400px;background:#0D1426;border:1.5px solid #1E2D52;border-radius:16px;padding:36px 32px}
+.logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:28px}
+.logo-m{width:38px;height:38px;background:linear-gradient(135deg,#00D4AA,#F5C842);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#080C18}
+.logo-t{font-weight:700;font-size:22px;letter-spacing:-.5px}
+.logo-t span{color:#00D4AA}
+h2{text-align:center;font-size:22px;font-weight:800;margin-bottom:6px}
+.sub{text-align:center;color:#7A8DB0;font-size:14px;margin-bottom:24px}
+.tabs{display:flex;gap:0;margin-bottom:24px;background:#131D36;border-radius:8px;padding:4px}
+.tab{flex:1;padding:9px;text-align:center;cursor:pointer;border-radius:6px;font-size:14px;font-weight:500;color:#7A8DB0;transition:all .2s}
+.tab.on{background:#1E2D52;color:#E4EAF8}
+label{display:block;font-size:13px;color:#7A8DB0;margin-bottom:6px;margin-top:16px}
+input{width:100%;padding:11px 14px;background:#131D36;border:1.5px solid #1E2D52;border-radius:8px;color:#E4EAF8;font-size:14px;outline:none;transition:border-color .2s}
+input:focus{border-color:#00D4AA}
+input::placeholder{color:#3D4F78}
+.btn{width:100%;padding:13px;margin-top:20px;background:linear-gradient(135deg,#00D4AA,#00B899);color:#080C18;border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,170,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.err{background:rgba(255,107,91,.1);border:1px solid rgba(255,107,91,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#FF6B5B;margin-top:14px;display:none}
+.ok-msg{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);border-radius:8px;padding:14px;font-size:14px;color:#00D4AA;margin-top:14px;display:none;text-align:center;line-height:1.6}
+.forgot{text-align:right;margin-top:8px}
+.forgot a{font-size:12px;color:#7A8DB0;cursor:pointer;text-decoration:none}
+.forgot a:hover{color:#00D4AA}
+.back{text-align:center;margin-top:20px}
+.back a{color:#00D4AA;font-size:13px;cursor:pointer;text-decoration:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#080C18;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">
+    <div class="logo-m">V</div>
+    <div class="logo-t">Vizora<span>AI</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" id="tab-signup" onclick="switchTab('signup')">Create Account</div>
+    <div class="tab" id="tab-login" onclick="switchTab('login')">Sign In</div>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="panel-signup">
+    <h2>Create your account</h2>
+    <p class="sub">Start creating AI videos for free</p>
+    <div class="err" id="su-err"></div>
+    <div class="ok-msg" id="su-ok"></div>
+    <label>Full Name</label>
+    <input type="text" id="su-name" placeholder="Your name">
+    <label>Email Address</label>
+    <input type="email" id="su-email" placeholder="you@email.com">
+    <label>Password</label>
+    <input type="password" id="su-pass" placeholder="Min 6 characters">
+    <button class="btn" id="su-btn" onclick="doSignup()">Create Account →</button>
+    <div class="back"><a href="/">← Back to Vizora AI</a></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="panel-login" style="display:none">
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in to your Vizora AI account</p>
+    <div class="err" id="li-err"></div>
+    <div class="ok-msg" id="li-ok"></div>
+    <label>Email Address</label>
+    <input type="email" id="li-email" placeholder="you@email.com">
+    <label>Password</label>
+    <input type="password" id="li-pass" placeholder="Your password">
+    <div class="forgot"><a onclick="showForgot()">Forgot password?</a></div>
+    <button class="btn" id="li-btn" onclick="doLogin()">Sign In →</button>
+    <div class="back"><a href="/">← Back to Vizora AI</a></div>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <div id="panel-forgot" style="display:none">
+    <h2>Reset Password</h2>
+    <p class="sub">We'll send a reset link to your email</p>
+    <div class="err" id="fp-err"></div>
+    <div class="ok-msg" id="fp-ok"></div>
+    <label>Email Address</label>
+    <input type="email" id="fp-email" placeholder="you@email.com">
+    <button class="btn" id="fp-btn" onclick="doForgot()">Send Reset Link →</button>
+    <div class="back"><a onclick="switchTab('login')">← Back to Sign In</a></div>
+  </div>
+</div>
+
+<script>
+var SURL = 'https://ezbbjxtdrhrqietqwxer.supabase.co';
+var SKEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
+
+function switchTab(t) {
+  document.getElementById('panel-signup').style.display = t==='signup' ? 'block' : 'none';
+  document.getElementById('panel-login').style.display = t==='login' ? 'block' : 'none';
+  document.getElementById('panel-forgot').style.display = 'none';
+  document.getElementById('tab-signup').className = 'tab' + (t==='signup'?' on':'');
+  document.getElementById('tab-login').className = 'tab' + (t==='login'?' on':'');
+}
+
+function showForgot() {
+  document.getElementById('panel-login').style.display = 'none';
+  document.getElementById('panel-forgot').style.display = 'block';
+}
+
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function showOk(id, msg) {
+  var el = document.getElementById(id);
+  el.innerHTML = msg; el.style.display = 'block';
+}
+function hideMsg(errId, okId) {
+  document.getElementById(errId).style.display = 'none';
+  if(okId) document.getElementById(okId).style.display = 'none';
+}
+function setBtn(id, loading, text) {
+  var b = document.getElementById(id);
+  b.disabled = loading;
+  b.innerHTML = loading ? '<span class="spinner"></span>Please wait...' : text;
+}
+
+async function doSignup() {
+  hideMsg('su-err','su-ok');
+  var name = document.getElementById('su-name').value.trim();
+  var email = document.getElementById('su-email').value.trim();
+  var pass = document.getElementById('su-pass').value;
+  if (!name) return showErr('su-err', 'Please enter your name.');
+  if (!email || !email.includes('@')) return showErr('su-err', 'Please enter a valid email.');
+  if (!pass || pass.length < 6) return showErr('su-err', 'Password must be at least 6 characters.');
+
+  setBtn('su-btn', true, '');
+  try {
+    var r = await fetch(SURL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SKEY },
+      body: JSON.stringify({ email: email, password: pass, data: { full_name: name } })
+    });
+    var d = await r.json();
+    setBtn('su-btn', false, 'Create Account →');
+
+    if (d.access_token) {
+      // Signed in immediately
+      localStorage.setItem('vz_token', d.access_token);
+      localStorage.setItem('vz_user', JSON.stringify(d.user));
+      showOk('su-ok', '🎉 Account created! Taking you to the studio...');
+      setTimeout(function() { window.location.href = '/?loggedin=1'; }, 1500);
+    } else if (d.id) {
+      // Created but needs email confirmation
+      showOk('su-ok', '📧 Almost there!<br><br>We sent a confirmation email to <strong>' + email + '</strong><br><br>Click the link in your email, then come back to Sign In.<br><small style="color:#7A8DB0">Check spam if you don\'t see it.</small>');
+    } else if (d.error || d.msg) {
+      var msg = d.error_description || d.msg || d.error || 'Signup failed';
+      if (msg.toLowerCase().includes('already')) {
+        showErr('su-err', 'Email already registered. Click "Sign In" instead.');
+      } else {
+        showErr('su-err', msg);
+      }
+    } else {
+      showErr('su-err', 'Unexpected response. Please try again. Response: ' + JSON.stringify(d).substring(0,100));
+    }
+  } catch(e) {
+    setBtn('su-btn', false, 'Create Account →');
+    showErr('su-err', 'Connection error: ' + e.message);
+  }
+}
+
+async function doLogin() {
+  hideMsg('li-err','li-ok');
+  var email = document.getElementById('li-email').value.trim();
+  var pass = document.getElementById('li-pass').value;
+  if (!email) return showErr('li-err', 'Please enter your email.');
+  if (!pass) return showErr('li-err', 'Please enter your password.');
+
+  setBtn('li-btn', true, '');
+  try {
+    var r = await fetch(SURL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SKEY },
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    var d = await r.json();
+    setBtn('li-btn', false, 'Sign In →');
+
+    if (d.access_token) {
+      localStorage.setItem('vz_token', d.access_token);
+      localStorage.setItem('vz_user', JSON.stringify(d.user));
+      showOk('li-ok', '✓ Signed in! Taking you to the studio...');
+      setTimeout(function() { window.location.href = '/?loggedin=1'; }, 1200);
+    } else {
+      var msg = d.error_description || d.msg || d.error || 'Login failed';
+      if (msg.toLowerCase().includes('confirm') || msg.toLowerCase().includes('verif')) {
+        showErr('li-err', 'Please confirm your email first — check your inbox for a verification link from Vizora AI.');
+      } else if (msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials')) {
+        showErr('li-err', 'Wrong email or password. Try again or use "Forgot password?"');
+      } else {
+        showErr('li-err', msg);
+      }
+    }
+  } catch(e) {
+    setBtn('li-btn', false, 'Sign In →');
+    showErr('li-err', 'Connection error: ' + e.message);
+  }
+}
+
+async function doForgot() {
+  hideMsg('fp-err','fp-ok');
+  var email = document.getElementById('fp-email').value.trim();
+  if (!email) return showErr('fp-err', 'Please enter your email address.');
+
+  setBtn('fp-btn', true, '');
+  try {
+    var r = await fetch(SURL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SKEY },
+      body: JSON.stringify({ email: email })
+    });
+    setBtn('fp-btn', false, 'Send Reset Link →');
+    showOk('fp-ok', '📧 Reset link sent to <strong>' + email + '</strong><br>Check your inbox and spam folder.');
+  } catch(e) {
+    setBtn('fp-btn', false, 'Send Reset Link →');
+    showErr('fp-err', 'Error: ' + e.message);
+  }
+}
+
+// Check if already logged in
+var token = localStorage.getItem('vz_token');
+if (token && window.location.search.indexOf('loggedin') === -1) {
+  window.location.href = '/?loggedin=1';
+}
+
+// Check URL param for which tab
+if (window.location.search.indexOf('login') > -1) switchTab('login');
+</script>
+</body>
+</html>
