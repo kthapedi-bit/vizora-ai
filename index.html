@@ -262,7 +262,7 @@ select option{background:var(--surface)}
 /* ══════════════════
    AUTH
 ══════════════════ */
-#v-auth{align-items:center;justify-content:center;background:var(--ink);padding:24px}
+#v-auth{align-items:center;justify-content:center;background:var(--ink);padding:24px;position:relative;z-index:1000}
 .auth-box{width:100%;max-width:420px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:36px 32px}
 .auth-logo{display:flex;justify-content:center;margin-bottom:28px}
 .auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;text-align:center;margin-bottom:6px}
@@ -940,8 +940,8 @@ select option{background:var(--surface)}
       <div class="logo-t">Vizora<span>AI</span></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')" style="border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)">Sign In</button>
-      <button class="btn btn-p btn-sm" onclick="showAuth('signup')">Start Free →</button>
+      <a href="#login" class="btn btn-ghost btn-sm" onclick="showAuth('login');return false;" style="border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);text-decoration:none">Sign In</a>
+      <a href="#signup" class="btn btn-p btn-sm" onclick="showAuth('signup');return false;" style="text-decoration:none">Start Free →</a>
     </div>
   </nav>
 
@@ -957,9 +957,9 @@ select option{background:var(--surface)}
     <p class="hero-sub">The AI video platform built for creators who refuse to be limited. Musicians in London, DJs in Berlin, fashion houses in Tokyo, entrepreneurs in Lagos — one platform, infinite possibilities.</p>
 
     <div class="hero-cta">
-      <button class="btn btn-p btn-lg" onclick="showAuth('signup')" style="padding:16px 36px;font-size:16px;letter-spacing:.3px">
+      <a href="#signup" class="btn btn-p btn-lg" onclick="showAuth('signup');return false;" style="padding:16px 36px;font-size:16px;letter-spacing:.3px;text-decoration:none">
         ▶ &nbsp;Enter the Studio
-      </button>
+      </a>
       <button class="btn btn-lg" onclick="showView('v-pricing')" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);padding:16px 28px;font-size:15px">
         View Pricing
       </button>
@@ -2399,6 +2399,11 @@ async function continueSerialVideo() {
 // ══════════════════════════════════════════════
 (async () => {
   // Skip if keys not configured
+  // Hash-based routing — handle #login, #signup, #reset
+  var hash = window.location.hash.replace('#','');
+  if (hash === 'login') { showAuth('login'); return; }
+  if (hash === 'signup') { showAuth('signup'); return; }
+
   // Handle password reset redirect
   var hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   var queryParams = new URLSearchParams(window.location.search);
@@ -2406,6 +2411,13 @@ async function continueSerialVideo() {
     showPasswordResetForm();
     return;
   }
+
+  // Listen for hash changes (back button etc)
+  window.addEventListener('hashchange', function() {
+    var h = window.location.hash.replace('#','');
+    if (h === 'login') showAuth('login');
+    else if (h === 'signup') showAuth('signup');
+  });
 
   // Check for saved session
   var sessionResult = await db.auth.getSession();
