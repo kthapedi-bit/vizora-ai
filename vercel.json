@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "index.html",
+      "src": "*.html",
       "use": "@vercel/static"
     }
   ],
@@ -16,8 +16,17 @@
       "dest": "/api/$1"
     },
     {
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/test-auth.html",
+      "dest": "/test-auth.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
 }
+
