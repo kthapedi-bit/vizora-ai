@@ -151,7 +151,7 @@ async function doSignup() {
       localStorage.setItem('vz_user', JSON.stringify(d.user));
       localStorage.setItem('vz_session', JSON.stringify({access_token: d.access_token, user: d.user}));
       showOk('su-ok', '🎉 Account created! Taking you to the studio...');
-      setTimeout(function() { window.location.href = '/'; }, 1500);
+      setTimeout(function() { window.location.href = '/dashboard.html'; }, 1500);
     } else if (d.id) {
       // Created but needs email confirmation
       showOk('su-ok', '📧 Almost there!<br><br>We sent a confirmation email to <strong>' + email + '</strong><br><br>Click the link in your email, then come back to Sign In.<br><small style="color:#7A8DB0">Check spam if you don\'t see it.</small>');
@@ -193,7 +193,7 @@ async function doLogin() {
       localStorage.setItem('vz_user', JSON.stringify(d.user));
       localStorage.setItem('vz_session', JSON.stringify({access_token: d.access_token, user: d.user}));
       showOk('li-ok', '✓ Signed in! Taking you to the studio...');
-      setTimeout(function() { window.location.href = '/'; }, 1200);
+      setTimeout(function() { window.location.href = '/dashboard.html'; }, 1200);
     } else {
       var msg = d.error_description || d.msg || d.error || 'Login failed';
       if (msg.toLowerCase().includes('confirm') || msg.toLowerCase().includes('verif')) {
@@ -233,7 +233,7 @@ async function doForgot() {
 // Check if already logged in
 var token = localStorage.getItem('vz_token');
 if (token && window.location.search.indexOf('loggedin') === -1) {
-  window.location.href = '/?loggedin=1';
+  window.location.href = '/dashboard.html';
 }
 
 // Check URL param for which tab
