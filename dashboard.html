@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizora AI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#080C18;--surface:#0D1426;--card:#131D36;--border:#1E2D52;--border-hi:#2A3D6E;--teal:#00D4AA;--gold:#F5C842;--coral:#FF6B5B;--text:#E4EAF8;--text-mid:#7A8DB0;--text-dim:#3D4F78;--r:14px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;display:flex}
+/* Sidebar */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sb-head{padding:20px 18px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-m{width:32px;height:32px;background:linear-gradient(135deg,var(--teal),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--ink)}
+.logo-t{font-family:'Syne',sans-serif;font-weight:700;font-size:18px}.logo-t span{color:var(--teal)}
+.sb-user{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--ink);flex-shrink:0}
+.sb-nav{padding:12px 10px;flex:1;display:flex;flex-direction:column;gap:2px}
+.nav-i{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-mid);transition:all .15s}
+.nav-i:hover{background:var(--card);color:var(--text)}
+.nav-i.on{background:rgba(0,212,170,.1);color:var(--teal)}
+.sb-bottom{padding:12px 10px;border-top:1px solid var(--border)}
+/* Main */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:20px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.content{padding:28px;flex:1}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card:hover{border-color:var(--border-hi)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;cursor:pointer;border:none;transition:all .2s;text-decoration:none}
+.btn-p{background:linear-gradient(135deg,var(--teal),#00B899);color:var(--ink);font-weight:700}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,212,170,.3)}
+.btn-g{background:linear-gradient(135deg,var(--gold),#DBA820);color:var(--ink);font-weight:700}
+.btn-ghost{background:transparent;border:1px solid var(--border-hi);color:var(--text-mid)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;margin-bottom:4px}
+.stat-l{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
+/* Section header */
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-t{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+/* Video wizard */
+.wizard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:28px}
+.field{margin-bottom:16px}
+.label{display:block;font-size:13px;color:var(--text-mid);margin-bottom:6px}
+input,textarea,select{width:100%;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--teal)}
+textarea{min-height:80px;resize:vertical}
+/* Chips */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chip{padding:6px 14px;border:1.5px solid var(--border);border-radius:100px;font-size:12px;cursor:pointer;transition:all .15s;color:var(--text-mid)}
+.chip:hover,.chip.on{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08)}
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--teal);color:var(--teal);padding:12px 24px;border-radius:100px;font-size:14px;font-weight:500;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+/* Video grid */
+.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.video-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s}
+.video-card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.video-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#0D1830,#1A2840);display:flex;align-items:center;justify-content:center;font-size:32px}
+.video-info{padding:12px}
+.video-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.video-meta{font-size:11px;color:var(--text-dim)}
+/* Status badge */
+.badge{display:inline-block;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.badge-ok{background:rgba(34,197,94,.1);color:#22C55E}
+.badge-proc{background:rgba(245,200,66,.1);color:var(--gold)}
+/* Panels */
+.panel{display:none}.panel.on{display:block}
+/* Loading */
+.loading{text-align:center;padding:60px;color:var(--text-dim)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Lang flags */
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.lang-card{border:1.5px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .15s;font-size:12px}
+.lang-card:hover,.lang-card.on{border-color:var(--teal);background:rgba(0,212,170,.06)}
+/* Format cards */
+.fmt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.fmt-card{border:1.5px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .15s}
+.fmt-card:hover,.fmt-card.on{border-color:var(--gold);background:rgba(245,200,66,.06)}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <div class="logo" onclick="window.location.href='/'">
+      <div class="logo-m">V</div>
+      <div class="logo-t">Vizora<span>AI</span></div>
+    </div>
+  </div>
+  <div class="sb-user">
+    <div class="avatar" id="user-avatar">K</div>
+    <div>
+      <div style="font-size:13px;font-weight:600" id="user-name">Loading...</div>
+      <div style="font-size:11px;color:var(--text-dim)" id="user-plan">Free Plan</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-i on" onclick="showPanel('dash')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-i" onclick="showPanel('create')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+      Create Video
+    </div>
+    <div class="nav-i" onclick="showPanel('videos')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg>
+      My Videos
+    </div>
+    <div class="nav-i" onclick="showPanel('characters')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Characters
+    </div>
+    <div class="nav-i" onclick="showPanel('studio')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Studio Builder
+    </div>
+    <div class="nav-i" onclick="showPanel('pricing')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Upgrade
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <div class="nav-i" onclick="doLogout()" style="color:var(--coral)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign Out
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- DASHBOARD PANEL -->
+  <div class="panel on" id="panel-dash">
+    <div class="topbar">
+      <div>
+        <h2 id="dash-greeting" style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">Good day 👋</h2>
+        <div style="font-size:13px;color:var(--text-dim);margin-top:2px">Welcome to your Vizora AI studio</div>
+      </div>
+      <button class="btn btn-p" onclick="showPanel('create')">▶ Create Video</button>
+    </div>
+    <div class="content">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-n" id="stat-total">0</div><div class="stat-l">Videos Created</div></div>
+        <div class="stat-card"><div class="stat-n" id="stat-month">0</div><div class="stat-l">This Month</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--teal)" id="stat-plan">Free</div><div class="stat-l">Current Plan</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:var(--gold)">7</div><div class="stat-l">Languages</div></div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="sec-h"><div class="sec-t">Quick Create</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px">
+        <div class="card" style="cursor:pointer;text-align:center;padding:24px" onclick="startQuick('Studio Podcast — professional host presenting content in a branded studio')">
+          <div style="font-size:28px;margin-bottom:10px">🎙️</div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:4px">Studio Podcast</div>
+          <div style="font-size:12px;color:var(--text-dim)">Talk show, interview, commentary</div>
+        </div>
+        <div class="card" style="cursor:pointer;text-align:center;padding:24px" onclick="startQuick('Fashion showcase — model presenting clothing in a professional showroom')">
+          <div style="font-size:28px;margin-bottom:10px">👗</div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:4px">Fashion Showcase</div>
+          <div style="font-size:12px;color:var(--text-dim)">Lookbooks, collections, ads</div>
+        </div>
+        <div class="card" style="cursor:pointer;text-align:center;padding:24px" onclick="startQuick('Business promotion — professional spokesperson presenting products or services')">
+          <div style="font-size:28px;margin-bottom:10px">📢</div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:4px">Brand Promo</div>
+          <div style="font-size:12px;color:var(--text-dim)">Products, services, events</div>
+        </div>
+      </div>
+
+      <!-- Recent videos -->
+      <div class="sec-h"><div class="sec-t">Recent Videos</div></div>
+      <div id="recent-videos">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);background:var(--card);border:1px solid var(--border);border-radius:var(--r)">
+          <div style="font-size:36px;margin-bottom:12px">🎬</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No videos yet</div>
+          <div style="font-size:13px;margin-bottom:20px">Create your first AI video in under 60 seconds</div>
+          <button class="btn btn-p" onclick="showPanel('create')">▶ Create First Video</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE VIDEO PANEL -->
+  <div class="panel" id="panel-create">
+    <div class="topbar">
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">Create Video</h2>
+        <div style="font-size:13px;color:var(--text-dim);margin-top:2px">Describe your vision — AI does the rest</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="wizard">
+        <div class="field">
+          <label class="label">What is this video about? *</label>
+          <textarea id="v-prompt" placeholder="Describe your video in detail. Include: who's in it, what they're doing, the setting, the mood, any key messages...
+
+Example: A confident South African entrepreneur presenting their new tech startup in a modern co-working space, speaking directly to camera, professional but approachable, ends with a call to action to visit the website."></textarea>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:6px">The more detail you add, the better your video will be.</div>
+        </div>
+        <div class="field">
+          <label class="label">Video Style</label>
+          <div class="chips" id="style-chips">
+            <div class="chip on" onclick="selChip(this,'style')">Cinematic</div>
+            <div class="chip" onclick="selChip(this,'style')">Documentary</div>
+            <div class="chip" onclick="selChip(this,'style')">Commercial</div>
+            <div class="chip" onclick="selChip(this,'style')">Social Media</div>
+            <div class="chip" onclick="selChip(this,'style')">Artistic</div>
+            <div class="chip" onclick="selChip(this,'style')">Corporate</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Format</label>
+          <div class="fmt-grid">
+            <div class="fmt-card on" onclick="selFmt(this,'16:9')">📺 Landscape<div style="font-size:10px;color:var(--text-dim);margin-top:2px">YouTube · TV</div></div>
+            <div class="fmt-card" onclick="selFmt(this,'9:16')">📱 Portrait<div style="font-size:10px;color:var(--text-dim);margin-top:2px">TikTok · Reels</div></div>
+            <div class="fmt-card" onclick="selFmt(this,'1:1')">⬜ Square<div style="font-size:10px;color:var(--text-dim);margin-top:2px">Instagram</div></div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Language</label>
+          <div class="lang-grid">
+            <div class="lang-card on" onclick="selLang(this,'en')">🇬🇧 English</div>
+            <div class="lang-card" onclick="selLang(this,'ar')">🇦🇪 Arabic</div>
+            <div class="lang-card" onclick="selLang(this,'fr')">🇫🇷 French</div>
+            <div class="lang-card" onclick="selLang(this,'sw')">🇰🇪 Swahili</div>
+            <div class="lang-card" onclick="selLang(this,'zu')">🇿🇦 Zulu</div>
+            <div class="lang-card" onclick="selLang(this,'id')">🇮🇩 Bahasa</div>
+            <div class="lang-card" onclick="selLang(this,'zh')">🇨🇳 Mandarin</div>
+          </div>
+        </div>
+        <div id="gen-error" style="display:none;background:rgba(255,107,91,.1);border:1px solid var(--coral);border-radius:8px;padding:12px;font-size:13px;color:var(--coral);margin-bottom:12px"></div>
+        <button class="btn btn-p btn-full" id="gen-btn" onclick="generateVideo()" style="margin-top:8px;padding:14px;font-size:15px">
+          ▶ &nbsp;Generate Video
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div id="gen-result" style="display:none;background:var(--card);border:1px solid var(--teal);border-radius:var(--r);padding:28px;text-align:center">
+        <div style="font-size:40px;margin-bottom:14px">🎉</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;margin-bottom:8px">Your Video is Ready!</div>
+        <div id="result-meta" style="font-size:13px;color:var(--text-dim);margin-bottom:20px"></div>
+        <video id="result-video" controls style="width:100%;max-width:560px;border-radius:8px;margin-bottom:20px;display:none"></video>
+        <div id="result-processing" style="background:var(--surface);border-radius:8px;padding:16px;margin-bottom:20px;font-size:14px;color:var(--text-mid)">
+          ⏳ Processing — check My Videos in a few minutes
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-ghost" onclick="document.getElementById('gen-result').style.display='none';document.getElementById('v-prompt').value=''">+ Make Another</button>
+          <button class="btn btn-p" onclick="showPanel('videos')">My Videos →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY VIDEOS PANEL -->
+  <div class="panel" id="panel-videos">
+    <div class="topbar">
+      <div><h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">My Videos</h2></div>
+      <button class="btn btn-p btn-sm" onclick="showPanel('create')">+ Create New</button>
+    </div>
+    <div class="content">
+      <div id="videos-grid">
+        <div style="text-align:center;padding:60px;color:var(--text-dim)">
+          <div style="font-size:36px;margin-bottom:12px">📹</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No videos yet</div>
+          <button class="btn btn-p" onclick="showPanel('create')">Create Your First Video</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARACTERS PANEL -->
+  <div class="panel" id="panel-characters">
+    <div class="topbar">
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">Character Log</h2>
+        <div style="font-size:13px;color:var(--text-dim);margin-top:2px">Save characters for consistent video series</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="showCharModal()">+ New Character</button>
+    </div>
+    <div class="content">
+      <div style="background:linear-gradient(135deg,rgba(0,212,170,.06),transparent);border:1px solid var(--border-hi);border-radius:var(--r);padding:20px;margin-bottom:24px">
+        <div style="font-weight:600;margin-bottom:8px">How Character Log works</div>
+        <div style="font-size:13px;color:var(--text-mid);display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <div>🎨 <strong>Design</strong> your character's look and personality</div>
+          <div>💾 <strong>Save</strong> to your log with a visual reference</div>
+          <div>🎬 <strong>Use</strong> when creating videos for consistency</div>
+          <div>📺 <strong>Series</strong> — same character, episode after episode</div>
+        </div>
+      </div>
+      <div id="chars-grid">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);background:var(--card);border:1px solid var(--border);border-radius:var(--r)">
+          <div style="font-size:36px;margin-bottom:12px">🎭</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No characters yet</div>
+          <button class="btn btn-p" onclick="showCharModal()">+ Create First Character</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDIO BUILDER PANEL -->
+  <div class="panel" id="panel-studio">
+    <div class="topbar">
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">Studio Builder</h2>
+        <div style="font-size:13px;color:var(--text-dim);margin-top:2px">Design your visual environments — shoot in them repeatedly</div>
+      </div>
+      <button class="btn btn-g btn-sm" onclick="showStudioModal()">+ Build Studio</button>
+    </div>
+    <div class="content">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+        <div class="card" style="cursor:pointer;padding:20px" onclick="showStudioModal('podcast')">
+          <div style="font-size:24px;margin-bottom:8px">🎙️</div>
+          <div style="font-weight:600;margin-bottom:4px">Podcast Studio</div>
+          <div style="font-size:12px;color:var(--text-dim)">Talk show set with desk, mics, branded backdrop</div>
+          <div style="font-size:11px;color:var(--teal);margin-top:8px">Build this →</div>
+        </div>
+        <div class="card" style="cursor:pointer;padding:20px" onclick="showStudioModal('fashion')">
+          <div style="font-size:24px;margin-bottom:8px">👗</div>
+          <div style="font-weight:600;margin-bottom:4px">Fashion Showroom</div>
+          <div style="font-size:12px;color:var(--text-dim)">Clean studio for clothing. Upload real store photos.</div>
+          <div style="font-size:11px;color:var(--teal);margin-top:8px">Build this →</div>
+        </div>
+        <div class="card" style="cursor:pointer;padding:20px" onclick="showStudioModal('interior')">
+          <div style="font-size:24px;margin-bottom:8px">🛋️</div>
+          <div style="font-weight:600;margin-bottom:4px">Interior Room</div>
+          <div style="font-size:12px;color:var(--text-dim)">Log a room. Swap furniture per client presentation.</div>
+          <div style="font-size:11px;color:var(--teal);margin-top:8px">Build this →</div>
+        </div>
+      </div>
+      <div id="studios-grid">
+        <div style="text-align:center;padding:40px;color:var(--text-dim);background:var(--card);border:1px solid var(--border);border-radius:var(--r)">
+          <div style="font-size:36px;margin-bottom:12px">🎬</div>
+          <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">No studios yet</div>
+          <button class="btn btn-g" onclick="showStudioModal()">Build First Studio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICING PANEL -->
+  <div class="panel" id="panel-pricing">
+    <div class="topbar"><h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px">Upgrade Plan</h2></div>
+    <div class="content">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <div class="card" style="padding:24px">
+          <div style="font-weight:700;font-family:'Syne',sans-serif;margin-bottom:8px">Free</div>
+          <div style="font-size:32px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px">$0</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Forever free</div>
+          <div style="font-size:13px;color:var(--text-mid);display:flex;flex-direction:column;gap:6px">
+            <div>✓ 3 videos/month</div><div>✓ 5 seconds max</div><div>✓ 720p · Watermark</div><div>✓ English only</div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;border-color:var(--teal)">
+          <div style="font-weight:700;font-family:'Syne',sans-serif;color:var(--teal);margin-bottom:8px">Creator</div>
+          <div style="font-size:32px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px">$9<span style="font-size:14px;font-weight:400;color:var(--text-dim)">/mo</span></div>
+          <div style="font-size:12px;color:var(--teal);margin-bottom:16px">$2/week via M-Pesa</div>
+          <div style="font-size:13px;color:var(--text-mid);display:flex;flex-direction:column;gap:6px">
+            <div>✓ 30 videos/month</div><div>✓ 30 seconds</div><div>✓ 1080p · No watermark</div><div>✓ All 7 languages</div><div>✓ Brand kit</div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;border-color:var(--gold)">
+          <div style="font-weight:700;font-family:'Syne',sans-serif;color:var(--gold);margin-bottom:8px">Designer</div>
+          <div style="font-size:32px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px">$29<span style="font-size:14px;font-weight:400;color:var(--text-dim)">/mo</span></div>
+          <div style="font-size:12px;color:var(--gold);margin-bottom:16px">For creative studios</div>
+          <div style="font-size:13px;color:var(--text-mid);display:flex;flex-direction:column;gap:6px">
+            <div>✓ 60 videos/month</div><div>✓ 60 seconds</div><div>✓ 4K quality</div><div style="color:var(--teal)">✓ Character Log</div><div>✓ Serial continuation</div>
+          </div>
+        </div>
+        <div class="card" style="padding:24px;border-color:var(--coral)">
+          <div style="font-weight:700;font-family:'Syne',sans-serif;color:var(--coral);margin-bottom:8px">Business</div>
+          <div style="font-size:32px;font-weight:800;font-family:'Syne',sans-serif;margin-bottom:4px">$59<span style="font-size:14px;font-weight:400;color:var(--text-dim)">/mo</span></div>
+          <div style="font-size:12px;color:var(--coral);margin-bottom:16px">Full studio suite</div>
+          <div style="font-size:13px;color:var(--text-mid);display:flex;flex-direction:column;gap:6px">
+            <div>✓ 100 videos/month</div><div>✓ 3 minutes</div><div style="color:var(--teal)">✓ Character Log</div><div style="color:var(--teal)">✓ Studio Builder</div><div>✓ Team access (5 seats)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Character Modal -->
+<div id="char-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1.5px solid var(--border-hi);border-radius:var(--r);padding:32px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">New Character</div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('char-modal').style.display='none'">✕</button>
+    </div>
+    <div class="field"><label class="label">Character Name *</label><input type="text" id="char-name" placeholder="e.g. Kwame — Podcast Host"></div>
+    <div class="field"><label class="label">Role / Series</label><input type="text" id="char-role" placeholder="e.g. Host of The Weekly Show"></div>
+    <div class="field"><label class="label">Visual Description *</label><textarea id="char-desc" placeholder="Describe exactly how this character looks: age, ethnicity, clothing, facial features, expression..."></textarea></div>
+    <div class="field"><label class="label">Primary Use</label>
+      <select id="char-use"><option value="podcast">Podcast / Talk Show</option><option value="fashion">Fashion & Lifestyle</option><option value="interior">Interior Design</option><option value="sport">Sport Coverage</option><option value="education">Education</option><option value="marketing">Marketing & Ads</option><option value="corporate">Corporate</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="document.getElementById('char-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-p" style="flex:2;justify-content:center" onclick="saveCharacter()">💾 Save Character</button>
+    </div>
+  </div>
+</div>
+
+<!-- Studio Modal -->
+<div id="studio-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1.5px solid var(--border-hi);border-radius:var(--r);padding:32px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">Build Studio</div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('studio-modal').style.display='none'">✕</button>
+    </div>
+    <div class="field"><label class="label">Studio Name *</label><input type="text" id="studio-name" placeholder="e.g. The World Cup Weekly Studio"></div>
+    <div class="field"><label class="label">Type</label><select id="studio-type"><option value="podcast">Podcast / Talk Show</option><option value="fashion">Fashion Showroom</option><option value="interior">Interior Room</option><option value="outdoor">Outdoor / Location</option><option value="custom">Custom</option></select></div>
+    <div class="field"><label class="label">Environment Description *</label><textarea id="studio-desc" placeholder="Describe the visual space: lighting, colors, furniture, brand elements, camera angle..."></textarea></div>
+    <div class="field"><label class="label">Swappable Elements</label><textarea id="studio-swap" style="min-height:60px" placeholder="What changes between videos? e.g. products on shelf, outfit on mannequin..."></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="document.getElementById('studio-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-g" style="flex:2;justify-content:center" onclick="saveStudio()">🏗️ Save Studio</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var SURL = 'https://ezbbjxtdrhrqietqwxer.supabase.co';
+var SKEY = 'sb_publishable_L_yTa7K51O4jyBb0MG9Cjg_-43R0XtL';
+var currentUser = null;
+var token = null;
+var selStyle = 'Cinematic';
+var selFormat = '16:9';
+var selLangCode = 'en';
+
+// ── AUTH CHECK ──
+function getSession() {
+  try {
+    var s = localStorage.getItem('vz_session');
+    if (s) { var p = JSON.parse(s); if (p && p.access_token) return p; }
+  } catch(e) {}
+  try {
+    var t = localStorage.getItem('vz_token');
+    var u = localStorage.getItem('vz_user');
+    if (t && u) return { access_token: t, user: JSON.parse(u) };
+  } catch(e) {}
+  return null;
+}
+
+var session = getSession();
+if (!session) {
+  window.location.href = '/login.html';
+} else {
+  token = session.access_token;
+  currentUser = session.user;
+  initDashboard();
+}
+
+function initDashboard() {
+  var email = currentUser.email || '';
+  var name = (currentUser.user_metadata && currentUser.user_metadata.full_name) || email.split('@')[0] || 'Creator';
+  var initial = name.charAt(0).toUpperCase();
+
+  document.getElementById('user-avatar').textContent = initial;
+  document.getElementById('user-name').textContent = name;
+
+  var hour = new Date().getHours();
+  var greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = greeting + ', ' + name.split(' ')[0] + ' 👋';
+
+  // Load data
+  loadVideos();
+  loadCharacters();
+  loadStudios();
+}
+
+// ── NAVIGATION ──
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('on'); });
+  document.querySelectorAll('.nav-i').forEach(function(n) { n.classList.remove('on'); });
+  document.getElementById('panel-' + id).classList.add('on');
+  // Highlight nav
+  var navItems = document.querySelectorAll('.nav-i');
+  navItems.forEach(function(n) {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) n.classList.add('on');
+  });
+}
+
+function startQuick(prompt) {
+  showPanel('create');
+  document.getElementById('v-prompt').value = prompt;
+}
+
+// ── VIDEO GENERATION ──
+function selChip(el, group) {
+  document.querySelectorAll('#style-chips .chip').forEach(function(c) { c.classList.remove('on'); });
+  el.classList.add('on');
+  selStyle = el.textContent.trim();
+}
+function selFmt(el, fmt) {
+  document.querySelectorAll('.fmt-card').forEach(function(c) { c.classList.remove('on'); });
+  el.classList.add('on');
+  selFormat = fmt;
+}
+function selLang(el, code) {
+  document.querySelectorAll('.lang-card').forEach(function(c) { c.classList.remove('on'); });
+  el.classList.add('on');
+  selLangCode = code;
+}
+
+async function generateVideo() {
+  var prompt = document.getElementById('v-prompt').value.trim();
+  if (!prompt) { showErr('gen-error', 'Please describe your video first.'); return; }
+
+  var btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.3);border-top-color:#080C18;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px"></span>Generating...';
+  document.getElementById('gen-error').style.display = 'none';
+
+  try {
+    var r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt, aspect_ratio: selFormat, duration: 5, style: selStyle, language: selLangCode })
+    });
+    var d = await r.json();
+    btn.disabled = false;
+    btn.innerHTML = '▶ &nbsp;Generate Video';
+
+    if (d.video_url) {
+      document.getElementById('gen-result').style.display = 'block';
+      document.getElementById('result-meta').textContent = selStyle + ' · ' + selFormat + ' · ' + selLangCode.toUpperCase();
+      var vid = document.getElementById('result-video');
+      vid.src = d.video_url;
+      vid.style.display = 'block';
+      document.getElementById('result-processing').style.display = 'none';
+      // Save to DB
+      saveVideo(prompt, d.video_url);
+    } else if (d.status === 'processing') {
+      document.getElementById('gen-result').style.display = 'block';
+      document.getElementById('result-meta').textContent = selStyle + ' · ' + selFormat;
+      document.getElementById('result-video').style.display = 'none';
+      document.getElementById('result-processing').style.display = 'block';
+      saveVideo(prompt, null);
+    } else {
+      showErr('gen-error', d.error || 'Generation failed. Please try again.');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '▶ &nbsp;Generate Video';
+    showErr('gen-error', 'Connection error: ' + e.message);
+  }
+}
+
+async function saveVideo(prompt, url) {
+  if (!currentUser) return;
+  await fetch(SURL + '/rest/v1/videos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SKEY, 'Authorization': 'Bearer ' + token, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: currentUser.id, prompt: prompt, video_url: url, style: selStyle, language: selLangCode, format: selFormat, status: url ? 'ready' : 'processing', created_at: new Date().toISOString() })
+  });
+  loadVideos();
+}
+
+// ── LOAD DATA ──
+async function loadVideos() {
+  if (!currentUser) return;
+  try {
+    var r = await fetch(SURL + '/rest/v1/videos?select=*&user_id=eq.' + currentUser.id + '&order=created_at.desc&limit=12', {
+      headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + token }
+    });
+    var videos = await r.json();
+    if (!Array.isArray(videos)) return;
+
+    document.getElementById('stat-total').textContent = videos.length;
+    var thisMonth = videos.filter(function(v) {
+      return new Date(v.created_at).getMonth() === new Date().getMonth();
+    }).length;
+    document.getElementById('stat-month').textContent = thisMonth;
+
+    if (videos.length > 0) {
+      renderVideos(videos);
+    }
+  } catch(e) {}
+}
+
+function renderVideos(videos) {
+  var html = '<div class="video-grid">' + videos.map(function(v) {
+    return '<div class="video-card"><div class="video-thumb">' + (v.video_url ? '▶' : '⏳') + '</div><div class="video-info"><div class="video-title">' + (v.prompt || 'Untitled').substring(0, 50) + '</div><div class="video-meta">' + (v.style || '') + ' · ' + new Date(v.created_at).toLocaleDateString() + ' <span class="badge ' + (v.status === 'ready' ? 'badge-ok' : 'badge-proc') + '">' + (v.status || 'processing') + '</span></div></div></div>';
+  }).join('') + '</div>';
+  document.getElementById('videos-grid').innerHTML = html;
+  document.getElementById('recent-videos').innerHTML = html;
+}
+
+async function loadCharacters() {
+  if (!currentUser) return;
+  try {
+    var r = await fetch(SURL + '/rest/v1/characters?select=*&user_id=eq.' + currentUser.id + '&order=created_at.desc', {
+      headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + token }
+    });
+    var chars = await r.json();
+    if (!Array.isArray(chars) || chars.length === 0) return;
+    var icons = { podcast:'🎙️', fashion:'👗', interior:'🏠', sport:'⚽', education:'📚', marketing:'📢', corporate:'🏢' };
+    document.getElementById('chars-grid').innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">' + chars.map(function(c) {
+      return '<div class="card" style="padding:18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-size:18px">' + (icons[c.primary_use] || '🎭') + '</div><div><div style="font-weight:600;font-size:14px">' + c.name + '</div><div style="font-size:11px;color:var(--text-dim)">' + (c.role || c.primary_use) + '</div></div></div><div style="font-size:12px;color:var(--text-mid);line-height:1.5">' + (c.description || '').substring(0,80) + '...</div><button class="btn btn-p btn-sm btn-full" style="margin-top:10px" onclick="useChar(\'' + c.name + '\',\'' + (c.description||'').replace(/'/g,"\\'").substring(0,100) + '\')">🎬 Use in Video</button></div>';
+    }).join('') + '</div>';
+  } catch(e) {}
+}
+
+async function loadStudios() {
+  if (!currentUser) return;
+  try {
+    var r = await fetch(SURL + '/rest/v1/studios?select=*&user_id=eq.' + currentUser.id + '&order=created_at.desc', {
+      headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + token }
+    });
+    var studios = await r.json();
+    if (!Array.isArray(studios) || studios.length === 0) return;
+    var icons = { podcast:'🎙️', fashion:'👗', interior:'🛋️', outdoor:'🌍', custom:'⚙️' };
+    document.getElementById('studios-grid').innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">' + studios.map(function(s) {
+      return '<div class="card" style="padding:18px"><div style="font-size:24px;margin-bottom:8px">' + (icons[s.studio_type]||'🎬') + '</div><div style="font-weight:600;font-size:14px;margin-bottom:4px">' + s.name + '</div><div style="font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:10px">' + (s.description||'').substring(0,80) + '...</div><button class="btn btn-g btn-sm btn-full" onclick="useStudio(\'' + s.name + '\',\'' + (s.description||'').replace(/'/g,"\\'").substring(0,100) + '\')">🎬 Shoot Here</button></div>';
+    }).join('') + '</div>';
+  } catch(e) {}
+}
+
+// ── SAVE DATA ──
+function showCharModal() { document.getElementById('char-modal').style.display = 'flex'; }
+function showStudioModal(type) {
+  document.getElementById('studio-modal').style.display = 'flex';
+  if (type) document.getElementById('studio-type').value = type;
+}
+
+async function saveCharacter() {
+  var name = document.getElementById('char-name').value.trim();
+  var desc = document.getElementById('char-desc').value.trim();
+  if (!name || !desc) { toast('Name and description are required.'); return; }
+  await fetch(SURL + '/rest/v1/characters', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SKEY, 'Authorization': 'Bearer ' + token, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: currentUser.id, name: name, role: document.getElementById('char-role').value, description: desc, primary_use: document.getElementById('char-use').value, created_at: new Date().toISOString() })
+  });
+  document.getElementById('char-modal').style.display = 'none';
+  toast('✅ Character saved!');
+  loadCharacters();
+}
+
+async function saveStudio() {
+  var name = document.getElementById('studio-name').value.trim();
+  var desc = document.getElementById('studio-desc').value.trim();
+  if (!name || !desc) { toast('Name and description are required.'); return; }
+  await fetch(SURL + '/rest/v1/studios', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SKEY, 'Authorization': 'Bearer ' + token, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ user_id: currentUser.id, name: name, studio_type: document.getElementById('studio-type').value, description: desc, swappable: document.getElementById('studio-swap').value, created_at: new Date().toISOString() })
+  });
+  document.getElementById('studio-modal').style.display = 'none';
+  toast('✅ Studio saved!');
+  loadStudios();
+}
+
+function useChar(name, desc) {
+  showPanel('create');
+  document.getElementById('v-prompt').value = 'Character: ' + name + ' — ' + desc + '\n\nVideo topic: ';
+  document.getElementById('v-prompt').focus();
+}
+function useStudio(name, desc) {
+  showPanel('create');
+  document.getElementById('v-prompt').value = 'Studio: ' + name + ' — ' + desc + '\n\nVideo topic: ';
+  document.getElementById('v-prompt').focus();
+}
+
+// ── UTILS ──
+function doLogout() {
+  localStorage.removeItem('vz_session');
+  localStorage.removeItem('vz_token');
+  localStorage.removeItem('vz_user');
+  window.location.href = '/login.html';
+}
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function showErr(id, msg) {
+  var el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+</script>
+</body>
+</html>
