@@ -5,7 +5,11 @@
     { "src": "*.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
+    {
+      "src": "/api/generate",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/generate.js"
+    },
     { "src": "/login.html", "dest": "/login.html" },
     { "src": "/dashboard.html", "dest": "/dashboard.html" },
     { "src": "/test-auth.html", "dest": "/test-auth.html" },
