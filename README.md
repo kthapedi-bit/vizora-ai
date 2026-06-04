@@ -1,2 +1,0 @@
-# vizora-ai
-Video generator 
