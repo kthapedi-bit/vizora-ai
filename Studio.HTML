@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Football Autonomous — Production Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#05070E;--deep:#080B15;--card:#0D1020;--border:#161D30;--gold:#F5C842;--red:#E8303A;--teal:#00D4AA;--white:#F0F4FF;--dim:#3A4560;--green:#00C853;--purple:#B478FF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--white);min-height:100vh;display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--deep);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100}
+.brand{display:flex;flex-direction:column}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;background:linear-gradient(90deg,var(--gold),#FFE082);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-sub{font-size:9px;color:var(--dim);font-family:'DM Mono',monospace;letter-spacing:2px}
+.live{display:flex;align-items:center;gap:7px;background:rgba(232,48,58,.1);border:1px solid rgba(232,48,58,.3);padding:6px 14px;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;color:var(--red)}
+.dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.1}}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:260px 1fr 300px;height:calc(100vh - 51px)}
+
+/* PANEL */
+.pnl{background:var(--deep);overflow-y:auto;border-right:1px solid var(--border)}
+.pnl-r{border-right:none;border-left:1px solid var(--border)}
+.sec{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sec-t{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:10px}
+
+/* CHARACTER CARDS */
+.char-card{background:var(--card);border:1.5px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.char-card:hover{border-color:var(--gold)}
+.char-card.on{border-color:var(--gold);background:rgba(245,200,66,.04)}
+.char-card.locked{opacity:.4;cursor:default}
+.char-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.char-photo{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid;flex-shrink:0;background:var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;overflow:hidden;position:relative}
+.char-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.char-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:.5px}
+.char-role{font-size:10px;color:var(--dim);font-family:'DM Mono',monospace}
+.char-badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px;font-family:'Barlow Condensed',sans-serif}
+.char-voice{font-size:11px;color:var(--dim);margin-top:4px;display:flex;align-items:center;gap:6px}
+.voice-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* FORM */
+.fld{margin-bottom:10px}
+.fld label{display:block;font-size:9px;color:var(--dim);margin-bottom:4px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase}
+.fld input,.fld textarea,.fld select{width:100%;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--gold)}
+.fld textarea{resize:vertical;min-height:70px}
+.fld select option{background:var(--card)}
+
+/* UPLOAD ZONE */
+.upzone{border:2px dashed var(--border);border-radius:6px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;color:var(--dim)}
+.upzone:hover{border-color:var(--gold);color:var(--gold)}
+
+/* CANVAS CENTER */
+.center{display:flex;flex-direction:column;align-items:center;background:#030508;overflow:auto;padding:16px;position:relative}
+.center::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 50%,rgba(245,200,66,.04),transparent 60%),radial-gradient(ellipse at 75% 50%,rgba(232,48,58,.03),transparent 60%);pointer-events:none}
+#cv{border-radius:4px;box-shadow:0 0 0 1px rgba(245,200,66,.15),0 24px 70px rgba(0,0,0,.9);max-width:100%;position:relative;z-index:1}
+.cv-ctrl{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1}
+
+/* SCRIPT AREA */
+.script-area{background:var(--card);border:1px solid var(--border);border-radius:6px;margin-top:12px;overflow:hidden;width:100%;max-width:660px;position:relative;z-index:1}
+.script-top{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--deep)}
+.script-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px}
+.script-body{padding:10px 14px}
+.script-body textarea{width:100%;background:transparent;border:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;outline:none;resize:vertical;min-height:90px}
+
+/* AUDIO PLAYER */
+.audio-section{width:100%;max-width:660px;margin-top:10px;position:relative;z-index:1}
+.player{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px;display:flex;align-items:center;gap:12px}
+.play-btn{width:36px;height:36px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0;transition:all .15s}
+.pb-gold{background:var(--gold);color:var(--ink)}
+.pb-gold:hover{transform:scale(1.1)}
+.prog{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;cursor:pointer}
+.prog-f{height:100%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:2px;width:0%;transition:width .1s}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+#wv{width:100%;max-width:660px;height:44px;border-radius:4px;background:var(--card);border:1px solid var(--border);margin-top:6px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:4px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-gold:hover{background:#DBA820;transform:translateY(-1px)}
+.btn-teal{background:var(--teal);color:var(--ink)}
+.btn-teal:hover{background:#00B899}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#C42530}
+.btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--white)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-full{width:100%;justify-content:center;margin-bottom:6px}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* EPISODE TABS */
+.ep-tabs{display:flex;gap:0;margin-bottom:10px;background:var(--card);border-radius:4px;padding:3px}
+.ep-tab{flex:1;padding:5px;text-align:center;cursor:pointer;border-radius:3px;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;color:var(--dim);transition:all .15s}
+.ep-tab.on{background:var(--gold);color:var(--ink)}
+
+/* TEMPLATE GRID */
+.tmpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tmpl{aspect-ratio:16/9;border-radius:4px;border:2px solid var(--border);cursor:pointer;overflow:hidden;position:relative;transition:all .15s}
+.tmpl:hover,.tmpl.on{border-color:var(--gold)}
+.tmpl-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;gap:2px}
+.tmpl-lbl{font-size:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;margin-top:2px}
+
+/* SWATCH */
+.swatch-row{display:flex;gap:6px;flex-wrap:wrap}
+.swatch{width:24px;height:24px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.swatch.on{border-color:#fff;transform:scale(1.2)}
+
+/* OV ITEMS */
+.ov{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center}
+.ov:hover{border-color:var(--gold)}
+.ov.on{border-color:var(--gold);background:rgba(245,200,66,.04)}
+.ov-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px}
+.ov-desc{font-size:10px;color:var(--dim)}
+.ov-tog{width:28px;height:16px;border-radius:8px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s}
+.ov.on .ov-tog{background:var(--gold)}
+.ov-tog::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .2s}
+.ov.on .ov-tog::after{left:14px}
+
+/* STATUS */
+.status{padding:8px 12px;border-radius:4px;font-size:12px;font-family:'DM Mono',monospace;margin-bottom:8px;display:none}
+.status.ok{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:var(--green);display:block}
+.status.err{background:rgba(232,48,58,.1);border:1px solid rgba(232,48,58,.3);color:var(--red);display:block}
+.status.info{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);color:var(--gold);display:block}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--gold);color:var(--gold);padding:9px 20px;border-radius:4px;font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border)}
+input[type=range]{accent-color:var(--gold);width:100%}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-name">Pro Football Autonomous</div>
+    <div class="brand-sub">Production Studio · Powered by Vizora AI</div>
+  </div>
+  <div class="live"><div class="dot"></div>FIFA WORLD CUP 2026</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm" onclick="resetAll()">↺ Reset</button>
+    <button class="btn btn-gold btn-sm" onclick="exportAll()">📦 Export All</button>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- ═══ LEFT: CHARACTERS + SETUP ═══ -->
+<div class="pnl">
+
+  <div class="sec">
+    <div class="sec-t">⚙ ElevenLabs API Key</div>
+    <div class="fld">
+      <label>Your API Key</label>
+      <input type="password" id="el-key" placeholder="sk_..." oninput="saveKey()">
+    </div>
+    <div style="font-size:10px;color:var(--dim)">Get free key at elevenlabs.io — stored locally, never sent to us</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">🎙 Cast — Select Active Host</div>
+
+    <!-- BILL RIVERS -->
+    <div class="char-card on" id="cc-bill" onclick="selectChar('bill')">
+      <div class="char-top">
+        <div class="char-photo" id="ph-bill" style="border-color:var(--gold);color:var(--gold)">
+          BR
+          <input type="file" accept="image/*" style="display:none" id="img-bill" onchange="loadCharImg('bill',this)">
+        </div>
+        <div style="flex:1">
+          <div class="char-name" style="color:var(--gold)">BILL RIVERS</div>
+          <div class="char-role">MAIN HOST</div>
+          <span class="char-badge" style="background:rgba(245,200,66,.12);color:var(--gold)">● MAIN</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();document.getElementById('img-bill').click()">📷</button>
+      </div>
+      <div class="fld">
+        <label>ElevenLabs Voice ID</label>
+        <input type="text" id="vid-bill" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" oninput="saveVoices()">
+      </div>
+      <div class="char-voice">
+        <div class="voice-dot" style="background:var(--gold)"></div>
+        <span>Deep, authoritative, sports broadcaster</span>
+      </div>
+    </div>
+
+    <!-- RICO FLASH -->
+    <div class="char-card" id="cc-rico" onclick="selectChar('rico')">
+      <div class="char-top">
+        <div class="char-photo" id="ph-rico" style="border-color:var(--red);color:var(--red)">
+          RF
+          <input type="file" accept="image/*" style="display:none" id="img-rico" onchange="loadCharImg('rico',this)">
+        </div>
+        <div style="flex:1">
+          <div class="char-name" style="color:var(--red)">RICO FLASH</div>
+          <div class="char-role">GUEST ANALYST</div>
+          <span class="char-badge" style="background:rgba(232,48,58,.12);color:var(--red)">GROUP STAGE</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();document.getElementById('img-rico').click()">📷</button>
+      </div>
+      <div class="fld">
+        <label>ElevenLabs Voice ID</label>
+        <input type="text" id="vid-rico" placeholder="e.g. AZnzlk1XvdvUeBnXmlld" oninput="saveVoices()">
+      </div>
+      <div class="char-voice"><div class="voice-dot" style="background:var(--red)"></div><span>Fast, energetic, pundit style</span></div>
+    </div>
+
+    <!-- DANTE CROSS -->
+    <div class="char-card" id="cc-dante" onclick="selectChar('dante')">
+      <div class="char-top">
+        <div class="char-photo" id="ph-dante" style="border-color:var(--green);color:var(--green)">
+          DC
+          <input type="file" accept="image/*" style="display:none" id="img-dante" onchange="loadCharImg('dante',this)">
+        </div>
+        <div style="flex:1">
+          <div class="char-name" style="color:var(--green)">DANTE CROSS</div>
+          <div class="char-role">GUEST ANALYST</div>
+          <span class="char-badge" style="background:rgba(0,200,83,.12);color:var(--green)">GROUP STAGE</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();document.getElementById('img-dante').click()">📷</button>
+      </div>
+      <div class="fld">
+        <label>ElevenLabs Voice ID</label>
+        <input type="text" id="vid-dante" placeholder="e.g. ErXwobaYiN019PkySvjV" oninput="saveVoices()">
+      </div>
+      <div class="char-voice"><div class="voice-dot" style="background:var(--green)"></div><span>Calm, analytical, tactical</span></div>
+    </div>
+
+    <!-- LEILA STORM -->
+    <div class="char-card locked" id="cc-leila" onclick="selectChar('leila')">
+      <div class="char-top">
+        <div class="char-photo" id="ph-leila" style="border-color:var(--purple);color:var(--purple)">
+          LS
+          <input type="file" accept="image/*" style="display:none" id="img-leila" onchange="loadCharImg('leila',this)">
+        </div>
+        <div style="flex:1">
+          <div class="char-name" style="color:var(--purple)">LEILA STORM</div>
+          <div class="char-role">STANDALONE HOST</div>
+          <span class="char-badge" style="background:rgba(180,120,255,.12);color:var(--purple)">🔒 POST GROUP STAGE</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();document.getElementById('img-leila').click()">📷</button>
+      </div>
+      <div class="fld">
+        <label>ElevenLabs Voice ID</label>
+        <input type="text" id="vid-leila" placeholder="Unlocks after group stage" oninput="saveVoices()">
+      </div>
+    </div>
+  </div>
+
+  <!-- EPISODE -->
+  <div class="sec">
+    <div class="sec-t">📺 Episode</div>
+    <div class="ep-tabs">
+      <div class="ep-tab on" onclick="setEpType('group',this)">GROUP</div>
+      <div class="ep-tab" onclick="setEpType('ko',this)">K/O</div>
+      <div class="ep-tab" onclick="setEpType('semi',this)">SEMI</div>
+      <div class="ep-tab" onclick="setEpType('final',this)">FINAL</div>
+    </div>
+    <div class="fld"><label>Episode No.</label><input id="ep-num" value="EP. 01" oninput="redraw()"></div>
+    <div class="fld"><label>Episode Title</label><input id="ep-title" value="Group Stage Preview — All 48 Teams" oninput="redraw()"></div>
+    <div class="fld"><label>Featured Match / Topic</label><input id="ep-match" value="USA · Canada · Mexico" oninput="redraw()"></div>
+    <div class="fld"><label>Tagline</label><textarea id="ep-tag" oninput="redraw()">48 teams. One trophy. We break it all down.</textarea></div>
+  </div>
+
+  <!-- QUICK EPISODE PRESETS -->
+  <div class="sec">
+    <div class="sec-t">⚡ Quick Load</div>
+    <button class="btn btn-ghost btn-full" onclick="qep(1)">EP.01 — Group Stage Preview</button>
+    <button class="btn btn-ghost btn-full" onclick="qep(2)">EP.02 — Match Day 1 Recap</button>
+    <button class="btn btn-ghost btn-full" onclick="qep(3)">EP.03 — Dark Horses Special</button>
+    <button class="btn btn-ghost btn-full" onclick="qep(4)">EP.04 — Round of 16 Preview</button>
+    <button class="btn btn-ghost btn-full" onclick="qep(5)">EP.05 — Semi-Final Analysis</button>
+    <button class="btn btn-ghost btn-full" onclick="qep(6)">EP.06 — FINAL PREVIEW 🏆</button>
+  </div>
+</div>
+
+<!-- ═══ CENTER: CANVAS + VOICE ═══ -->
+<div class="center">
+  <canvas id="cv" width="1280" height="720"></canvas>
+
+  <div class="cv-ctrl">
+    <button class="btn btn-ghost btn-sm" onclick="chZoom(-0.1)">−</button>
+    <span class="mono" id="zlbl">50%</span>
+    <button class="btn btn-ghost btn-sm" onclick="chZoom(0.1)">+</button>
+    <div style="width:1px;height:18px;background:var(--border)"></div>
+    <select id="fmt" onchange="setFmt()" style="background:var(--card);border:1px solid var(--border);color:var(--white);padding:5px 8px;border-radius:4px;font-size:11px;outline:none">
+      <option value="yt">YouTube 1280×720</option>
+      <option value="sq">Spotify 1400×1400</option>
+      <option value="reel">Reel 720×1280</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="redraw()">↺ Refresh</button>
+    <button class="btn btn-gold btn-sm" onclick="dlPNG()">⬇ PNG</button>
+  </div>
+
+  <!-- SCRIPT + VOICE GENERATOR -->
+  <div class="script-area">
+    <div class="script-top">
+      <div class="script-label" id="script-char-label" style="color:var(--gold)">📝 BILL RIVERS — Script</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="clearScript()">✕ Clear</button>
+        <button class="btn btn-teal btn-sm" id="gen-voice-btn" onclick="generateVoice()">🎙 Generate Voice</button>
+      </div>
+    </div>
+    <div class="script-body">
+      <div class="status" id="voice-status"></div>
+      <textarea id="script-txt" placeholder="Write what Bill Rivers says in this episode...&#10;&#10;Example:&#10;Welcome back to Pro Football Autonomous, the only podcast that gives you the real breakdown. I'm Bill Rivers. The World Cup 2026 is finally here — 48 teams, three host nations, and one trophy. Tonight, Dante Cross and Rico Flash are in the studio and we are going deep on every group..."></textarea>
+    </div>
+  </div>
+
+  <!-- AUDIO PLAYER -->
+  <div class="audio-section">
+    <canvas id="wv" width="660" height="44"></canvas>
+    <div class="player" id="player" style="display:none">
+      <button class="play-btn pb-gold" id="pbtn" onclick="togglePlay()">▶</button>
+      <div style="flex:1">
+        <div class="prog" onclick="seekAud(event)"><div class="prog-f" id="pf"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          <span class="mono" id="tcur">0:00</span>
+          <span class="mono" id="tdur">0:00</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="dlAudio()">⬇ MP3</button>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <div class="upzone" onclick="document.getElementById('aud-in').click()" style="display:inline-block;padding:8px 20px;font-size:11px">
+        📁 Or upload existing audio (MP3/WAV)
+        <input type="file" id="aud-in" accept="audio/*" style="display:none" onchange="loadAud(this)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RIGHT: DESIGN ═══ -->
+<div class="pnl pnl-r">
+
+  <div class="sec">
+    <div class="sec-t">🎨 Template</div>
+    <div class="tmpl-grid">
+      <div class="tmpl on" id="t-dark" onclick="setTmpl('dark',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#05070E,#0D1020)"><div>⚫</div><div class="tmpl-lbl" style="color:#F5C842">STADIUM</div></div></div>
+      <div class="tmpl" id="t-pitch" onclick="setTmpl('pitch',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#020C00,#041500)"><div>🟩</div><div class="tmpl-lbl" style="color:#00C853">PITCH</div></div></div>
+      <div class="tmpl" id="t-fire" onclick="setTmpl('fire',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#120200,#250400)"><div>🔴</div><div class="tmpl-lbl" style="color:#E8303A">MATCHDAY</div></div></div>
+      <div class="tmpl" id="t-night" onclick="setTmpl('night',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#03041A,#08092A)"><div>🌙</div><div class="tmpl-lbl" style="color:#7B8FFF">NIGHT</div></div></div>
+      <div class="tmpl" id="t-trophy" onclick="setTmpl('trophy',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#0E0A00,#1A1400)"><div>🏆</div><div class="tmpl-lbl" style="color:#F5C842">TROPHY</div></div></div>
+      <div class="tmpl" id="t-minimal" onclick="setTmpl('minimal',this)"><div class="tmpl-inner" style="background:linear-gradient(135deg,#060606,#0F0F0F)"><div>▪</div><div class="tmpl-lbl" style="color:#666">MINIMAL</div></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">🎨 Accent Color</div>
+    <div class="swatch-row">
+      <div class="swatch on" style="background:#F5C842" onclick="setAccent('#F5C842',this)"></div>
+      <div class="swatch" style="background:#E8303A" onclick="setAccent('#E8303A',this)"></div>
+      <div class="swatch" style="background:#00C853" onclick="setAccent('#00C853',this)"></div>
+      <div class="swatch" style="background:#00D4AA" onclick="setAccent('#00D4AA',this)"></div>
+      <div class="swatch" style="background:#7B8FFF" onclick="setAccent('#7B8FFF',this)"></div>
+      <div class="swatch" style="background:#B478FF" onclick="setAccent('#B478FF',this)"></div>
+      <div class="swatch" style="background:#FF8C42" onclick="setAccent('#FF8C42',this)"></div>
+      <div class="swatch" style="background:#FFFFFF" onclick="setAccent('#FFFFFF',this)"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">🖼 Assets</div>
+    <button class="btn btn-ghost btn-full" onclick="document.getElementById('bg-in').click()">🏟 Upload Studio Background</button>
+    <input type="file" id="bg-in" accept="image/*" style="display:none" onchange="loadBg(this)">
+    <button class="btn btn-ghost btn-full" onclick="document.getElementById('logo-in').click()">🔖 Upload PFA Logo</button>
+    <input type="file" id="logo-in" accept="image/*" style="display:none" onchange="loadLogo(this)">
+    <button class="btn btn-ghost btn-full" onclick="bgImg=null;redraw()">✕ Remove background</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">👁 Overlays</div>
+    <div class="ov on" id="ov-brand" onclick="tog('brand')"><div><div class="ov-name">PFA Brand</div><div class="ov-desc">Logo strip & sub</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-ep" onclick="tog('ep')"><div><div class="ov-name">Episode Title</div><div class="ov-desc">Main headline</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-match" onclick="tog('match')"><div><div class="ov-name">Match / Topic</div><div class="ov-desc">Featured tag</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-host" onclick="tog('host')"><div><div class="ov-name">Host Lower Third</div><div class="ov-desc">Name pill</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-chars" onclick="tog('chars')"><div><div class="ov-name">Character Photos</div><div class="ov-desc">Active cast on canvas</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-wave" onclick="tog('wave')"><div><div class="ov-name">Audio Bars</div><div class="ov-desc">EQ animation</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-wc" onclick="tog('wc')"><div><div class="ov-name">⚽ World Cup Badge</div><div class="ov-desc">FIFA 2026 stamp</div></div><div class="ov-tog"></div></div>
+    <div class="ov on" id="ov-plat" onclick="tog('plat')"><div><div class="ov-name">Platforms</div><div class="ov-desc">Spotify + YouTube</div></div><div class="ov-tog"></div></div>
+    <div class="ov" id="ov-tag" onclick="tog('tag')"><div><div class="ov-name">Tagline</div><div class="ov-desc">Episode descriptor</div></div><div class="ov-tog"></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">📐 Text Scale</div>
+    <div class="fld"><label>Title Size</label><input type="range" id="sz-t" min="22" max="90" value="52" oninput="redraw()"></div>
+    <div class="fld"><label>Brand Size</label><input type="range" id="sz-b" min="12" max="36" value="19" oninput="redraw()"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">📤 Export</div>
+    <button class="btn btn-gold btn-full" onclick="dlPNG()">⬇ Download PNG</button>
+    <button class="btn btn-ghost btn-full" onclick="copyClip()">📋 Copy Image</button>
+    <button class="btn btn-ghost btn-full" onclick="exportAll()">📦 All 3 Sizes</button>
+    <div class="fld" style="margin-top:8px"><label>Episode Notes (Spotify/YT)</label><textarea id="ep-notes" style="min-height:80px" placeholder="Type episode description for upload..."></textarea></div>
+    <button class="btn btn-ghost btn-full" onclick="copyNotes()">📋 Copy Description</button>
+  </div>
+
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ──
+var cv = document.getElementById('cv');
+var ctx = cv.getContext('2d');
+var accent = '#F5C842';
+var tmpl = 'dark';
+var bgImg = null, logoImg = null;
+var audEl = null, audBlob = null;
+var zv = 0.5;
+var activeChar = 'bill';
+var charImgs = {bill:null, rico:null, dante:null, leila:null};
+var ov = {brand:true, ep:true, match:true, host:true, chars:true, wave:true, wc:true, plat:true, tag:false};
+
+var chars = {
+  bill:  {name:'BILL RIVERS',  role:'MAIN HOST',       color:'#F5C842', initials:'BR'},
+  rico:  {name:'RICO FLASH',   role:'GUEST ANALYST',   color:'#E8303A', initials:'RF'},
+  dante: {name:'DANTE CROSS',  role:'GUEST ANALYST',   color:'#00C853', initials:'DC'},
+  leila: {name:'LEILA STORM',  role:'HOST',            color:'#B478FF', initials:'LS'}
+};
+
+var tmpls = {
+  dark:    {bg:['#05070E','#0D1020','#131525']},
+  pitch:   {bg:['#020B00','#041400','#061D00']},
+  fire:    {bg:['#100200','#1C0300','#260400']},
+  night:   {bg:['#03041A','#08092A','#0D0E38']},
+  trophy:  {bg:['#0D0900','#181200','#221A00']},
+  minimal: {bg:['#050505','#090909','#0D0D0D']}
+};
+
+var dims = {yt:[1280,720], sq:[1400,1400], reel:[720,1280]};
+
+// ── LOAD SAVED STATE ──
+window.onload = function() {
+  var k = localStorage.getItem('pfa_elkey');
+  if (k) document.getElementById('el-key').value = k;
+  var v = localStorage.getItem('pfa_voices');
+  if (v) { try { var o = JSON.parse(v); Object.keys(o).forEach(function(k){ var el = document.getElementById('vid-'+k); if(el) el.value = o[k]; }); } catch(e){} }
+  applyZoom(); redraw();
+};
+
+function saveKey() { localStorage.setItem('pfa_elkey', document.getElementById('el-key').value); }
+function saveVoices() {
+  var o = {bill:$('vid-bill').value, rico:$('vid-rico').value, dante:$('vid-dante').value, leila:$('vid-leila').value};
+  localStorage.setItem('pfa_voices', JSON.stringify(o));
+}
+
+function $(id){ return document.getElementById(id); }
+
+// ── CHARACTER SELECTION ──
+function selectChar(k) {
+  if (k === 'leila' && document.getElementById('cc-leila').classList.contains('locked')) return;
+  activeChar = k;
+  document.querySelectorAll('.char-card').forEach(c => c.classList.remove('on'));
+  document.getElementById('cc-'+k).classList.add('on');
+  var c = chars[k];
+  $('script-char-label').textContent = '📝 ' + c.name + ' — Script';
+  $('script-char-label').style.color = c.color;
+  $('script-txt').placeholder = 'Write what ' + c.name.split(' ')[0] + ' says in this episode...';
+  redraw();
+}
+
+// ── CHARACTER IMAGE UPLOAD ──
+function loadCharImg(key, input) {
+  var f = input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      charImgs[key] = img;
+      // Update avatar in sidebar
+      var ph = document.getElementById('ph-'+key);
+      ph.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%"><input type="file" accept="image/*" style="display:none" id="img-'+key+'" onchange="loadCharImg(\''+key+'\',this)">';
+      redraw();
+    };
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(f);
+  toast('📷 ' + chars[key].name + ' photo loaded!');
+}
+
+// ── ASSETS ──
+function loadBg(input) {
+  var f = input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { var i = new Image(); i.onload = function(){bgImg=i;redraw()}; i.src = e.target.result; };
+  r.readAsDataURL(f);
+  toast('🏟 Studio background loaded!');
+}
+function loadLogo(input) {
+  var f = input.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) { var i = new Image(); i.onload = function(){logoImg=i;redraw()}; i.src = e.target.result; };
+  r.readAsDataURL(f);
+  toast('Logo loaded!');
+}
+
+// ── DESIGN ──
+function setTmpl(t, el) {
+  tmpl = t;
+  document.querySelectorAll('.tmpl').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  redraw();
+}
+function setAccent(c, el) {
+  accent = c;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('on'));
+  el.classList.add('on');
+  redraw();
+}
+function tog(k) {
+  ov[k] = !ov[k];
+  document.getElementById('ov-'+k).classList.toggle('on', ov[k]);
+  redraw();
+}
+function setEpType(t, el) {
+  document.querySelectorAll('.ep-tab').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  var m = {group:['Group Stage Preview — All 48 Teams','USA · Canada · Mexico'], ko:['Round of 16 — Who Advances?','Last 16 Matchups'], semi:['Semi-Final Preview — Final Four','The Last 4 Standing'], final:['THE FINAL — Who Wins the World Cup?','Grand Final 2026']};
+  $('ep-title').value = m[t][0]; $('ep-match').value = m[t][1]; redraw();
+}
+function qep(n) {
+  var eps = [
+    ['EP. 01','Group Stage Preview — All 48 Teams','USA · Canada · Mexico'],
+    ['EP. 02','Match Day 1 Recap — Goals & Chaos','Group A · Group B Results'],
+    ['EP. 03','Dark Horses — Who Shocks the World?','Morocco · Senegal · Japan · Iran'],
+    ['EP. 04','Round of 16 — Knockout Football Begins','Last 16 Analysis'],
+    ['EP. 05','Semi-Final Preview — Final Four','The Last 4 Standing'],
+    ['EP. 06','THE FINAL 🏆 — Champions Crowned','Grand Final Preview']
+  ];
+  var e = eps[n-1];
+  $('ep-num').value=e[0]; $('ep-title').value=e[1]; $('ep-match').value=e[2];
+  redraw(); toast('Episode '+n+' loaded!');
+}
+
+// ── MAIN DRAW ──
+function redraw() {
+  var W = cv.width, H = cv.height;
+  var t = tmpls[tmpl];
+  var sc = W / 1280;
+
+  // BG
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    var og = ctx.createLinearGradient(0,0,0,H);
+    og.addColorStop(0,'rgba(5,7,14,.72)'); og.addColorStop(1,'rgba(5,7,14,.9)');
+    ctx.fillStyle = og; ctx.fillRect(0,0,W,H);
+  } else {
+    var g = ctx.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,t.bg[0]); g.addColorStop(.55,t.bg[1]); g.addColorStop(1,t.bg[2]);
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,.018)'; ctx.lineWidth=1;
+    var gs=72*sc;
+    for(var x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+    for(var y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+    // Orbs
+    var r1=ctx.createRadialGradient(W*.22,H*.4,0,W*.22,H*.4,W*.38);
+    r1.addColorStop(0,hexA(accent,.07)); r1.addColorStop(1,'transparent');
+    ctx.fillStyle=r1; ctx.fillRect(0,0,W,H);
+  }
+
+  // ACCENT SIDE + TOP
+  ctx.fillStyle = accent;
+  ctx.fillRect(0,0,6*sc,H);
+  ctx.fillRect(0,0,W,3*sc);
+
+  var pad = 54*sc;
+
+  // CHARACTER PHOTOS ON CANVAS
+  if (ov.chars) {
+    var cKeys = ['bill','rico','dante'];
+    var hasPhotos = cKeys.filter(k => charImgs[k] !== null);
+    if (hasPhotos.length > 0) {
+      var phW = 180*sc, phH = 240*sc;
+      var totalW = hasPhotos.length * phW + (hasPhotos.length-1)*20*sc;
+      var startX = W - pad - totalW;
+      var phY = H - phH - 30*sc;
+      hasPhotos.forEach(function(k, i) {
+        var img = charImgs[k];
+        var c = chars[k];
+        var px = startX + i*(phW+20*sc);
+        // Photo with rounded top
+        ctx.save();
+        ctx.beginPath();
+        rRectPath(ctx,px,phY,phW,phH,12*sc);
+        ctx.clip();
+        ctx.drawImage(img,px,phY,phW,phH);
+        ctx.restore();
+        // Color border bottom
+        ctx.fillStyle = c.color;
+        ctx.fillRect(px, phY+phH-4*sc, phW, 4*sc);
+        // Name tag
+        ctx.font='700 '+12*sc+'px "Barlow Condensed",sans-serif';
+        ctx.fillStyle = c.color;
+        ctx.textAlign='center';
+        ctx.fillText(c.name, px+phW/2, phY+phH+14*sc);
+        ctx.textAlign='left';
+      });
+    }
+  }
+
+  // PFA BRAND
+  if (ov.brand) {
+    var bSz = parseInt($('sz-b').value)*sc;
+    ctx.font='900 '+bSz+'px "Bebas Neue",sans-serif';
+    ctx.fillStyle = accent;
+    ctx.fillText('PRO FOOTBALL AUTONOMOUS', pad, 36*sc);
+    ctx.fillStyle = hexA(accent,.3);
+    ctx.fillRect(pad, 42*sc, 180*sc, 1.5*sc);
+    ctx.font='500 '+11*sc+'px "DM Mono",monospace';
+    ctx.fillStyle = hexA('#fff',.35);
+    ctx.fillText('POWERED BY VIZORA AI · FIFA WORLD CUP 2026', pad, 56*sc);
+  }
+
+  // EP NUMBER + DATE
+  if (ov.ep) {
+    var epN = $('ep-num').value || 'EP. 01';
+    ctx.font='600 '+12*sc+'px "DM Mono",monospace';
+    ctx.fillStyle = hexA('#fff',.3);
+    var d = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+    ctx.fillText(epN + '  ·  ' + d, pad, H*.33);
+  }
+
+  // EPISODE TITLE
+  if (ov.ep) {
+    var title = $('ep-title').value || 'Episode Title';
+    var tSz = parseInt($('sz-t').value)*sc;
+    ctx.font='900 '+tSz+'px "Bebas Neue",sans-serif';
+    wrapText(ctx, title.toUpperCase(), pad, H*.42, W*.62, tSz*1.05, '#FFFFFF');
+  }
+
+  // MATCH TAG
+  if (ov.match) {
+    var match = $('ep-match').value || '';
+    if (match) {
+      ctx.font='700 '+15*sc+'px "Barlow Condensed",sans-serif';
+      var mW = ctx.measureText(match.toUpperCase()).width + 20*sc;
+      var mH = 22*sc, mY = H*.71;
+      ctx.fillStyle = accent;
+      rRect(pad,mY,mW,mH,3*sc);
+      ctx.fillStyle = '#000';
+      ctx.font='700 '+14*sc+'px "Barlow Condensed",sans-serif';
+      ctx.fillText(match.toUpperCase(), pad+10*sc, mY+mH*.72);
+    }
+  }
+
+  // TAGLINE
+  if (ov.tag) {
+    var tag = $('ep-tag').value || '';
+    if (tag) {
+      ctx.font='300 '+15*sc+'px "DM Sans",sans-serif';
+      wrapText(ctx, tag, pad, H*.82, W*.58, 19*sc, hexA('#fff',.4));
+    }
+  }
+
+  // HOST LOWER THIRD
+  if (ov.host) {
+    var ch = chars[activeChar];
+    ctx.font='800 '+15*sc+'px "Barlow Condensed",sans-serif';
+    var nW = ctx.measureText(ch.name).width + 26*sc;
+    var nH = 21*sc, nY = H*.86;
+    ctx.fillStyle = ch.color;
+    rRect(pad,nY,nW,nH,3*sc);
+    ctx.fillStyle = '#000';
+    ctx.fillText(ch.name, pad+13*sc, nY+nH*.72);
+    ctx.font='400 '+11*sc+'px "DM Sans",sans-serif';
+    ctx.fillStyle = hexA('#fff',.3);
+    ctx.fillText(ch.role, pad, nY+nH+13*sc);
+  }
+
+  // WAVE BARS
+  if (ov.wave) {
+    var bars=60,bW=W*.5/(bars*1.5),bX=pad,wY=H*.94;
+    for(var i=0;i<bars;i++){
+      var bH=(Math.sin(i*.42+Date.now()*.0025)*.5+.5)*16*sc+2*sc;
+      ctx.fillStyle=hexA(accent,.3+Math.sin(i*.3)*.2);
+      ctx.fillRect(bX+i*bW*1.5,wY-bH,bW,bH*2);
+    }
+  }
+
+  // WORLD CUP BADGE
+  if (ov.wc) {
+    var bR=54*sc, bX2=W-pad-bR, bY2=H*.5;
+    ctx.beginPath();ctx.arc(bX2,bY2,bR,0,Math.PI*2);
+    ctx.fillStyle=hexA(accent,.07);ctx.fill();
+    ctx.strokeStyle=accent;ctx.lineWidth=2.5*sc;ctx.stroke();
+    ctx.beginPath();ctx.arc(bX2,bY2,bR*.74,0,Math.PI*2);
+    ctx.strokeStyle=hexA(accent,.2);ctx.lineWidth=sc;ctx.stroke();
+    ctx.textAlign='center';
+    ctx.font='900 '+22*sc+'px "Bebas Neue",sans-serif';
+    ctx.fillStyle=accent;ctx.fillText('FIFA',bX2,bY2-8*sc);
+    ctx.font='500 '+26*sc+'px serif';ctx.fillText('⚽',bX2,bY2+12*sc);
+    ctx.font='700 '+10*sc+'px "Barlow Condensed",sans-serif';
+    ctx.fillStyle=hexA(accent,.65);ctx.fillText('2026',bX2,bY2+30*sc);
+    ctx.textAlign='left';
+  }
+
+  // PLATFORMS
+  if (ov.plat) {
+    ctx.font='500 '+11*sc+'px "DM Sans",sans-serif';
+    ctx.fillStyle=hexA('#fff',.28);
+    ctx.fillText('🎵 Spotify  ·  ▶ YouTube  ·  🎬 Vizora AI', pad, H-18*sc);
+  }
+
+  // LOGO
+  if (logoImg) {
+    var lS=54*sc,lX=W-pad-lS,lY=18*sc;
+    ctx.drawImage(logoImg,lX,lY,lS,lS);
+  } else {
+    var lS2=48*sc,lX2=W-pad-lS2,lY2=18*sc;
+    ctx.save();
+    var lg=ctx.createLinearGradient(lX2,lY2,lX2+lS2,lY2+lS2);
+    lg.addColorStop(0,accent);lg.addColorStop(1,'#E8303A');
+    rRectPath(ctx,lX2,lY2,lS2,lS2,8*sc);
+    ctx.fillStyle=lg;ctx.fill();
+    ctx.restore();
+    ctx.font='900 '+18*sc+'px "Bebas Neue",sans-serif';
+    ctx.fillStyle='#000';ctx.textAlign='center';
+    ctx.fillText('PFA',lX2+lS2/2,lY2+lS2*.65);
+    ctx.textAlign='left';
+  }
+}
+
+// ── ELEVENLABS VOICE GENERATION ──
+async function generateVoice() {
+  var apiKey = $('el-key').value.trim();
+  if (!apiKey) { setStatus('err','❌ Enter your ElevenLabs API key first (left panel)'); return; }
+  var voiceId = $('vid-'+activeChar).value.trim();
+  if (!voiceId) { setStatus('err','❌ Enter the ElevenLabs Voice ID for ' + chars[activeChar].name); return; }
+  var text = $('script-txt').value.trim();
+  if (!text) { setStatus('err','❌ Write the script first'); return; }
+  if (text.length > 5000) { setStatus('err','❌ Script too long — max 5000 characters'); return; }
+
+  var btn = $('gen-voice-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  setStatus('info','🎙 Sending to ElevenLabs... (' + text.length + ' characters)');
+
+  try {
+    var res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + voiceId, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.4, use_speaker_boost: true }
+      })
+    });
+
+    if (!res.ok) {
+      var err = await res.text();
+      throw new Error('ElevenLabs error ' + res.status + ': ' + err.substring(0,120));
+    }
+
+    audBlob = await res.blob();
+    var url = URL.createObjectURL(audBlob);
+    audEl = new Audio(url);
+    audEl.addEventListener('loadedmetadata', function(){
+      $('player').style.display = 'flex';
+      $('tdur').textContent = fmt(audEl.duration);
+      drawWV();
+    });
+    audEl.addEventListener('timeupdate', function(){
+      var p = (audEl.currentTime/audEl.duration*100)||0;
+      $('pf').style.width=p+'%';
+      $('tcur').textContent=fmt(audEl.currentTime);
+    });
+    audEl.addEventListener('ended', function(){ $('pbtn').textContent='▶'; });
+
+    setStatus('ok','✅ Voice generated for ' + chars[activeChar].name + ' — ' + Math.round(text.length/5) + 's approx');
+    btn.disabled = false;
+    btn.textContent = '🎙 Generate Voice';
+    toast('🎙 ' + chars[activeChar].name + ' voice ready!');
+
+  } catch(e) {
+    setStatus('err','❌ ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '🎙 Generate Voice';
+  }
+}
+
+function setStatus(type, msg) {
+  var el = $('voice-status');
+  el.className = 'status ' + type;
+  el.textContent = msg;
+}
+
+function clearScript() { $('script-txt').value=''; setStatus('ok',''); }
+
+// ── AUDIO ──
+function loadAud(input) {
+  var f = input.files[0]; if (!f) return;
+  audEl = new Audio(URL.createObjectURL(f));
+  audBlob = f;
+  audEl.addEventListener('loadedmetadata', function(){
+    $('player').style.display='flex';
+    $('tdur').textContent=fmt(audEl.duration);
+    drawWV();
+    toast('Audio loaded: '+f.name);
+  });
+  audEl.addEventListener('timeupdate', function(){
+    var p=(audEl.currentTime/audEl.duration*100)||0;
+    $('pf').style.width=p+'%';
+    $('tcur').textContent=fmt(audEl.currentTime);
+  });
+  audEl.addEventListener('ended', function(){ $('pbtn').textContent='▶'; });
+}
+
+function togglePlay() {
+  if (!audEl) return;
+  if (audEl.paused) { audEl.play(); $('pbtn').textContent='⏸'; }
+  else { audEl.pause(); $('pbtn').textContent='▶'; }
+}
+
+function seekAud(e) {
+  if (!audEl||!audEl.duration) return;
+  var r=e.currentTarget.getBoundingClientRect();
+  audEl.currentTime=(e.clientX-r.left)/r.width*audEl.duration;
+}
+
+function dlAudio() {
+  if (!audBlob) { toast('Generate or upload audio first'); return; }
+  var ep = $('ep-num').value||'ep01';
+  var name = ('PFA_'+chars[activeChar].name+'_'+ep+'.mp3').replace(/\s+/g,'-').replace(/\./g,'').toLowerCase();
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(audBlob instanceof Blob ? audBlob : new Blob([audBlob]));
+  a.download = name; a.click();
+  toast('🎙 Audio downloaded!');
+}
+
+function drawWV() {
+  var wc=$('wv'),wt=wc.getContext('2d');
+  wc.width=wc.offsetWidth*2||1320;
+  wt.clearRect(0,0,wc.width,wc.height);
+  var bars=90,bW=wc.width/bars/1.4;
+  for(var i=0;i<bars;i++){
+    var h=(Math.sin(i*.48)*.5+.5)*wc.height*.65+wc.height*.12;
+    var x=i*(wc.width/bars);
+    var gg=wt.createLinearGradient(0,0,0,wc.height);
+    gg.addColorStop(0,accent);gg.addColorStop(1,hexA(accent,.15));
+    wt.fillStyle=gg;wt.fillRect(x,(wc.height-h)/2,bW,h);
+  }
+}
+
+function fmt(s){var m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
+
+// ── ZOOM ──
+function applyZoom(){cv.style.width=(cv.width*zv)+'px';cv.style.height=(cv.height*zv)+'px';$('zlbl').textContent=Math.round(zv*100)+'%'}
+function chZoom(d){zv=Math.max(.2,Math.min(1.5,zv+d));applyZoom()}
+function setFmt(){var f=$('fmt').value,d=dims[f];cv.width=d[0];cv.height=d[1];redraw();applyZoom()}
+
+// ── EXPORT ──
+function dlPNG(suf) {
+  var ep=$('ep-num').value||'ep01';
+  var a=document.createElement('a');
+  a.download=('PFA_'+ep+(suf?'_'+suf:'')+'.png').replace(/[\s\.]/g,'_').toLowerCase();
+  a.href=cv.toDataURL('image/png');a.click();
+  toast('✅ PNG downloaded!');
+}
+async function exportAll() {
+  var fmts=[['yt',1280,720],['sq',1400,1400],['reel',720,1280]];
+  for(var i=0;i<fmts.length;i++){
+    cv.width=fmts[i][1];cv.height=fmts[i][2];redraw();
+    await new Promise(r=>setTimeout(r,300));
+    dlPNG(fmts[i][0]);
+  }
+  cv.width=1280;cv.height=720;redraw();applyZoom();
+  toast('📦 All 3 sizes downloaded!');
+}
+function copyClip(){
+  cv.toBlob(function(blob){
+    try{navigator.clipboard.write([new ClipboardItem({'image/png':blob})]).then(()=>toast('📋 Copied!'))}
+    catch(e){toast('Use Download PNG')}
+  });
+}
+function copyNotes(){
+  var n=$('ep-notes').value;if(!n){toast('Add notes first');return}
+  navigator.clipboard.writeText(n).then(()=>toast('📋 Copied!'));
+}
+function resetAll(){bgImg=null;logoImg=null;charImgs={bill:null,rico:null,dante:null,leila:null};cv.width=1280;cv.height=720;redraw();applyZoom();toast('Reset')}
+
+// ── CANVAS HELPERS ──
+function wrapText(ctx,text,x,y,maxW,lH,color){
+  var words=text.split(' '),line='',lines=[];
+  words.forEach(function(w){var t=line+w+' ';if(ctx.measureText(t).width>maxW&&line){lines.push(line.trim());line=w+' ';}else line=t});
+  lines.push(line.trim());
+  ctx.fillStyle=color;
+  lines.forEach(function(l,i){ctx.fillText(l,x,y+i*lH)});
+}
+function rRect(x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();ctx.fill();
+}
+function rRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+function hexA(hex,a){
+  try{var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return'rgba('+r+','+g+','+b+','+a+')';}
+  catch(e){return'rgba(255,255,255,'+a+')';}
+}
+
+// TOAST
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+// INIT
+applyZoom();redraw();
+setInterval(function(){if(ov.wave)redraw()},85);
+</script>
+</body>
+</html>
