@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "*.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/generate", "methods": ["POST","OPTIONS"], "dest": "/api/generate.js" },
+    { "src": "/login.html", "dest": "/login.html" },
+    { "src": "/dashboard.html", "dest": "/dashboard.html" },
+    { "src": "/studio.html", "dest": "/studio.html" },
+    { "src": "/test-auth.html", "dest": "/test-auth.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
